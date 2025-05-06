@@ -5,15 +5,18 @@
 /*!
 Packs the Receiver telemetry data into a TD_RECEIVER packet. Returns the length of the packet.
 */
-size_t packTelemetryData_Receiver(uint8_t* telemetryDataPtr, uint32_t id, const ReceiverBase& receiver)
+size_t packTelemetryData_Receiver(uint8_t* telemetryDataPtr, uint32_t id, uint32_t sequenceNumber, const ReceiverBase& receiver)
 {
     TD_RECEIVER* td = reinterpret_cast<TD_RECEIVER*>(telemetryDataPtr); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast,hicpp-use-auto,modernize-use-auto)
 
     td->id = id;
     td->type = TD_RECEIVER::TYPE;
     td->len = sizeof(TD_RECEIVER);
-    td->tickInterval = static_cast<uint8_t>(receiver.getTickCountDelta());
-    td->droppedPacketCount = static_cast<uint8_t>(receiver.getDroppedPacketCountDelta());
+    td->subType = 0;
+    td->sequenceNumber = static_cast<uint8_t>(sequenceNumber);
+
+    td->tickInterval = static_cast<uint16_t>(receiver.getTickCountDelta());
+    td->droppedPacketCount = static_cast<uint16_t>(receiver.getDroppedPacketCountDelta());
 
     td->data.controls = receiver.getControls(),
     td->data.switches = receiver.getSwitches(),

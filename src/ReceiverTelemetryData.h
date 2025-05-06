@@ -15,9 +15,11 @@ struct TD_RECEIVER {
     uint32_t id {0};
     uint8_t type {TYPE};
     uint8_t len {sizeof(TD_RECEIVER)}; //!< length of whole packet, ie sizeof(TD_RECEIVER)
+    uint8_t subType {0};
+    uint8_t sequenceNumber {0};
 
-    uint8_t tickInterval {0}; //!< tick number of ticks since last receiver update
-    uint8_t droppedPacketCount {0}; //!< the number of packets dropped by the receiver
+    uint16_t tickInterval {0}; //!< tick number of ticks since last receiver update
+    uint16_t droppedPacketCount {0}; //!< the number of packets dropped by the receiver
     struct Data {
         ReceiverBase::controls_t controls;
         uint32_t switches;
