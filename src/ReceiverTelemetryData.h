@@ -20,11 +20,11 @@ struct TD_RECEIVER {
 
     uint16_t tickInterval {0}; //!< tick number of ticks since last receiver update
     uint16_t droppedPacketCount {0}; //!< the number of packets dropped by the receiver
-    struct Data {
+    struct data_t {
         ReceiverBase::controls_t controls;
         uint32_t switches;
         std::array<uint16_t, 4> aux; //!< 4 auxiliary channels
     };
-    Data data;
+    data_t data;
 };
 #pragma pack(pop)
