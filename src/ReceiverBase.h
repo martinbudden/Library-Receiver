@@ -28,6 +28,7 @@ public:
     virtual EUI_48_t getMyEUI() const = 0;
     virtual EUI_48_t getPrimaryPeerEUI() const = 0;
     virtual void broadcastMyEUI() const = 0;
+    uint32_t getAuxiliaryChannelCount() const { return _auxiliaryChannelCount; }
     virtual uint32_t getAuxiliaryChannel(size_t index) const = 0;
 
     inline controls_t getControls() const { return _controls; }
@@ -49,4 +50,5 @@ protected:
     uint32_t _tickCountDelta {0};
     uint32_t _switches {0}; // 16 2 or 3 positions switches, each using 2-bits
     controls_t _controls {}; //!< the main 4 channels
+    uint32_t _auxiliaryChannelCount {0};
 };

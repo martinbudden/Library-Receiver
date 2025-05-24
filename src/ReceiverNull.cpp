@@ -47,4 +47,3 @@ uint32_t ReceiverNull::getAuxiliaryChannel(size_t index) const
     (void)index;
     return 0;
 }
-
