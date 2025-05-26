@@ -20,6 +20,8 @@ public:
     virtual EUI_48_t getPrimaryPeerEUI() const override;
     virtual void broadcastMyEUI() const override;
     virtual uint32_t getAuxiliaryChannel(size_t index) const override;
+public: // for testing
+    void setControls(const controls_t& controls) { _controls = controls; }
 private:
     uint32_t _packetCount {0};
     uint32_t _receivedPacketCount {0};
