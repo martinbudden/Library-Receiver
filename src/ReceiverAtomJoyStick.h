@@ -34,18 +34,19 @@ private:
     inline bool isPacketEmpty() const { return _received_data.len == 0 ? true : false;  }
     inline void setPacketEmpty() { _received_data.len = 0; }
     enum { DEFAULT_BROADCAST_COUNT = 20, DEFAULT_BROADCAST_DELAY_MS = 50 };
-    esp_err_t broadcastMyMacAddressForBinding(int broadcastCount=DEFAULT_BROADCAST_COUNT, uint32_t broadcastDelayMs=DEFAULT_BROADCAST_DELAY_MS) const;
+    esp_err_t broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const;
+    esp_err_t broadcastMyMacAddressForBinding() const { return broadcastMyMacAddressForBinding(DEFAULT_BROADCAST_COUNT, DEFAULT_BROADCAST_DELAY_MS); }
     enum checkPacket_t { CHECK_PACKET, DONT_CHECK_PACKET };
     bool unpackPacket(checkPacket_t checkPacket);
     void resetSticks();
-    void setDeadZones(int32_t deadZone);
+    void setDeadband(int32_t deadband);
     void setCurrentReadingsToBias();
     int32_t normalizedStick(int stickIndex) const;
 private:
     struct stick_t {
         int32_t rawQ4dot12 {0};
         int32_t biasQ4dot12 {0};
-        int32_t deadZoneQ4dot12 {16}; // last 4 bits of number
+        int32_t deadbandQ4dot12 {16}; // last 4 bits of number
     };
 private:
     ESPNOW_Transceiver _transceiver;

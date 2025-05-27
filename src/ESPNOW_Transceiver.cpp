@@ -1,7 +1,8 @@
-#if defined(USE_ESPNOW)
 
 #include "ESPNOW_Transceiver.h"
+#include <cstring>
 
+#if defined(USE_ESPNOW)
 #include <HardwareSerial.h>
 #include <cstring>
 #include <esp_wifi.h>
@@ -9,6 +10,7 @@
 //#define USE_INSTRUMENTATION
 #if defined(USE_INSTRUMENTATION)
 #include <freertos/FreeRTOS.h>
+#endif
 #endif
 
 // see https://github.com/espressif/esp-idf/blob/v5.3.1/components/esp_wifi/include/esp_now.h
@@ -20,6 +22,7 @@ Pointer to the transceiver used by the callback functions.
 */
 ESPNOW_Transceiver* ESPNOW_Transceiver::transceiver;
 
+#if defined(USE_ESPNOW)
 /*!
 Callback when data is sent.
 */
@@ -48,6 +51,7 @@ void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t
     }
     transceiver->copyReceivedDataToBuffer(macAddress, data, static_cast<size_t>(len));
 }
+#endif
 
 ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress)
 {
@@ -55,6 +59,7 @@ ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress)
     memcpy(&_myMacAddress[0], myMacAddress, ESP_NOW_ETH_ALEN);
 }
 
+#if defined(USE_ESPNOW)
 esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
 {
     esp_err_t err = esp_now_init();
@@ -103,7 +108,6 @@ esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, uint8_t chann
     if (primaryMacAddress != nullptr) {
         return setPrimaryPeerMacAddress(primaryMacAddress);
     }
-
     return ESP_OK;
 }
 

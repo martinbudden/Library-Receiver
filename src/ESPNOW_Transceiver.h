@@ -1,10 +1,26 @@
-#if defined(USE_ESPNOW)
 
 # pragma once
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#if defined(USE_ESPNOW)
 #include <esp_now.h>
-
+#else
+typedef int esp_err_t;
+enum {ESP_OK=0, ESP_FAIL=-1};
+enum esp_now_send_status_t {ESP_NOW_SEND_SUCCESS = 0, ESP_NOW_SEND_FAIL};
+enum  wifi_interface_t {WIFI_IF_STA = 1, WIFI_IF_AP  = 2};
+enum {ESP_NOW_ETH_ALEN=6, ESP_NOW_KEY_LEN = 16};
+struct esp_now_peer_info_t {
+    uint8_t peer_addr[ESP_NOW_ETH_ALEN];
+    uint8_t lmk[ESP_NOW_KEY_LEN];
+    uint8_t channel;
+    wifi_interface_t ifidx;
+    bool encrypt;
+    void *priv;
+};
+#endif
 
 class ESPNOW_Transceiver {
 public:
@@ -32,7 +48,13 @@ public:
     bool isPrimaryPeerMacAddressSet() const;
     const uint8_t* getPrimaryPeerMacAddress() const { return _peerData[PRIMARY_PEER].peer_info.peer_addr; }
     inline uint8_t getBroadcastChannel() const { return _peerData[BROADCAST_PEER].peer_info.channel; }
-    esp_err_t broadcastData(const uint8_t* data, size_t len) const { return esp_now_send(_peerData[BROADCAST_PEER].peer_info.peer_addr, data, len); }
+    esp_err_t broadcastData(const uint8_t* data, size_t len) const {
+#if defined(USE_ESPNOW)
+         return esp_now_send(_peerData[BROADCAST_PEER].peer_info.peer_addr, data, len); 
+#else
+        (void)data; (void)len; return -1;
+#endif
+    }
     inline uint32_t getReceivedPacketCount() const { return _receivedPacketCount; }
     inline uint32_t getTickCountDelta() const { return _tickCountDelta; }
     inline uint32_t getTickCountDeltaAndReset() { const uint32_t tickCountDelta = _tickCountDelta; _tickCountDelta = 0; return tickCountDelta; }
@@ -62,5 +84,3 @@ private:
     esp_now_send_status_t _sendStatus {ESP_NOW_SEND_SUCCESS};
     std::array<uint8_t, ESP_NOW_ETH_ALEN + 2> _myMacAddress {0, 0, 0, 0, 0, 0, 0, 0};
 };
-
-#endif // USE_ESPNOW

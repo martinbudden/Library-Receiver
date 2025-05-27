@@ -1,9 +1,8 @@
-#if defined(USE_ESPNOW)
-
 #include "ReceiverAtomJoyStick.h"
-
+#include <cstring>
+#if defined(USE_ESPNOW)
 #include <HardwareSerial.h>
-
+#endif
 
 ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress) :
     _transceiver(macAddress),
@@ -16,10 +15,15 @@ ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress) :
 /*!
 Setup the receiver. Initialize the transceiver.
 */
-esp_err_t ReceiverAtomJoyStick::setup(uint8_t channel)
+esp_err_t ReceiverAtomJoyStick::setup(uint8_t channel) // NOLINT(readability-convert-member-functions-to-static)
 {
+#if defined(USE_ESPNOW)
     const esp_err_t err = _transceiver.init(_received_data, channel, nullptr);
     return err;
+#else
+    (void)channel;
+    return 0;
+#endif
 }
 
 /*!
@@ -46,7 +50,7 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
     _droppedPacketCountPrevious = _droppedPacketCount;
 
     if (unpackPacket(CHECK_PACKET)) {
-        if (_packetCount == 5) {
+        if (_packetCount == 5) { // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
             // set the JoyStick bias so that the current readings are zero.
             setCurrentReadingsToBias();
         }
@@ -65,7 +69,9 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
         _newPacketAvailable = true;
         return true;
     }
+#if defined(USE_ARDUINO_ESP32)
     Serial.printf("BadPacket\r\n");
+#endif
     // we've had a packet even though it is a bad one, so we haven't lost contact with the receiver
     return true;
 }
@@ -105,28 +111,16 @@ void ReceiverAtomJoyStick::broadcastMyEUI() const
 
 uint32_t ReceiverAtomJoyStick::getAuxiliaryChannel(size_t index) const
 {
-    return (index >= _auxiliaryChannelCount) ? 0 : getSwitch(index) ? 2000 : 0;
-    uint32_t ret = 0;
-
     enum { CHANNEL_HIGH = 2000 };
-    // map the switches to the auxiliary channels
-    switch(index) {
-    case MOTOR_ON_OFF_SWITCH:
-        [[fallthrough]];
-    case MODE_SWITCH:
-        [[fallthrough]];
-    case ALT_MODE_SWITCH:
-        ret = getSwitch(index) ? CHANNEL_HIGH : 0;
-        break;
-    }
-    return ret;
+    return (index >= _auxiliaryChannelCount) ? 0 : getSwitch(index) ? CHANNEL_HIGH : 0;
 }
 
-esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const
+esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const // NOLINT(readability-convert-member-functions-to-static)
 {
     // peer command as used by the StampFlyController, see: https://github.com/m5stack/Atom-JoyStick/blob/main/examples/StampFlyController/src/main.cpp#L117
     static const std::array<uint8_t, 4> peerCommand { 0xaa, 0x55, 0x16, 0x88 };
-    std::array<uint8_t, 16> data;
+    enum { DATA_SIZE = 16 };
+    std::array<uint8_t, DATA_SIZE> data;
     static_assert(sizeof(data) > sizeof(peerCommand) + ESP_NOW_ETH_ALEN + 2);
 
     data[0] = _transceiver.getBroadcastChannel();
@@ -134,11 +128,16 @@ esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCou
     memcpy(&data[1 + ESP_NOW_ETH_ALEN], &peerCommand[0], sizeof(peerCommand));
 
     for (int ii = 0; ii < broadcastCount; ++ii) {
-        if (esp_err_t err = _transceiver.broadcastData(&data[0], sizeof(data)) != ESP_OK) {
+        const esp_err_t err = _transceiver.broadcastData(&data[0], sizeof(data));
+        if (err != ESP_OK) {
+#if !defined(USE_ARDUINO_ESP32)
             Serial.printf("broadcastMyMacAddressForBinding failed: %X\r\n", err);
+#endif
             return err;
         }
+#if !defined(FRAMEWORK_TEST)
         delay(broadcastDelayMs); // delay() function has units of milliseconds
+#endif
     }
     return ESP_OK;
 }
@@ -188,7 +187,8 @@ bool ReceiverAtomJoyStick::unpackPacket(checkPacket_t checkPacket)
             setPacketEmpty();
             return false;
         }
-        const uint8_t* macAddress = _transceiver.myMacAddress();
+//NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
+        const uint8_t* macAddress = _transceiver.myMacAddress(); // NOLINT(cppcoreguidelines-init-variables) false positive
         if (_packet[0] != macAddress[3] || _packet[1] != macAddress[4] || _packet[2] != macAddress[5]) { // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             //Serial.printf("packet: %02X:%02X:%02X\r\n", _packet[0], _packet[1], _packet[2]);
             //Serial.printf("my:     %02X:%02X:%02X\r\n", macAddress[3], macAddress[4], macAddress[5]);
@@ -197,7 +197,7 @@ bool ReceiverAtomJoyStick::unpackPacket(checkPacket_t checkPacket)
         }
     } else {
 #if !defined(UNIT_TEST_BUILD)
-        Serial.printf("packet: %02X:%02X:%02X\r\n", _packet[0], _packet[1], _packet[2]);
+        //Serial.printf("packet: %02X:%02X:%02X\r\n", _packet[0], _packet[1], _packet[2]);
 #endif
         //Serial.printf("peer:   %02X:%02X:%02X\r\n", _primaryPeerInfo.peer_addr[3], _primaryPeerInfo.peer_addr[4], _primaryPeerInfo.peer_addr[5]);
         //Serial.printf("my:     %02X:%02X:%02X\r\n", macAddress[3], macAddress[4], macAddress[5]);
@@ -213,6 +213,7 @@ bool ReceiverAtomJoyStick::unpackPacket(checkPacket_t checkPacket)
     _mode = _packet[21];  // _mode: stable or sport
     _altMode = _packet[22];
     _proactiveFlag = _packet[23];
+//NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
     setPacketEmpty();
     return true;
@@ -234,11 +235,11 @@ int32_t ReceiverAtomJoyStick::normalizedStick(int stickIndex) const
     }
 
     const int32_t ret = stick.rawQ4dot12 - stick.biasQ4dot12;
-    if (ret < -stick.deadZoneQ4dot12) {
-        return -(-stick.deadZoneQ4dot12 - ret); // (stick.bias - stick.deadZone/2 - min);
+    if (ret < -stick.deadbandQ4dot12) {
+        return -(-stick.deadbandQ4dot12 - ret); // (stick.bias - stick.deadband/2 - min);
     }
-    if (ret > stick.deadZoneQ4dot12) {
-        return (ret - stick.deadZoneQ4dot12); // (max - stick.bias - stick.deadZone/2);
+    if (ret > stick.deadbandQ4dot12) {
+        return (ret - stick.deadbandQ4dot12); // (max - stick.bias - stick.deadband/2);
     }
     return 0.0F;
 }
@@ -248,14 +249,13 @@ void ReceiverAtomJoyStick::resetSticks()
     _biasIsSet = static_cast<int>(false);
     for (auto& stick : _sticks) {
         stick.biasQ4dot12 = 0;
-        stick.deadZoneQ4dot12 = 0;
+        stick.deadbandQ4dot12 = 0;
     }
 }
 
-void ReceiverAtomJoyStick::setDeadZones(int32_t deadZoneQ4dot12)
+void ReceiverAtomJoyStick::setDeadband(int32_t deadbandQ4dot12)
 {
     for (auto& stick : _sticks) {
-        stick.deadZoneQ4dot12 = deadZoneQ4dot12;
+        stick.deadbandQ4dot12 = deadbandQ4dot12;
     }
 }
-#endif // USE_ESPNOW
