@@ -67,6 +67,35 @@ void test_receiver_controls()
     TEST_ASSERT_EQUAL(4, controls.pitchStickQ4dot12);
     TEST_ASSERT_EQUAL(5, controls.yawStickQ4dot12);
 }
+void test_receiver_auxiliary_channels()
+{
+    enum { AUXILIARY_CHANNEL_COUNT = 4};
+    ReceiverNull receiver(AUXILIARY_CHANNEL_COUNT); // NOLINT(misc-const-correctness) false positive
+
+    uint8_t switchIndex = 0;
+    TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
+    TEST_ASSERT_EQUAL(0, receiver.getAuxiliaryChannel(switchIndex));
+    receiver.setSwitch(switchIndex, 1);
+    TEST_ASSERT_GREATER_THAN(500, receiver.getAuxiliaryChannel(switchIndex));
+
+    switchIndex = 1;
+    TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
+    TEST_ASSERT_EQUAL(0, receiver.getAuxiliaryChannel(switchIndex));
+    receiver.setSwitch(switchIndex, 1);
+    TEST_ASSERT_GREATER_THAN(500, receiver.getAuxiliaryChannel(switchIndex));
+
+    switchIndex = 2;
+    TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
+    TEST_ASSERT_EQUAL(0, receiver.getAuxiliaryChannel(switchIndex));
+    receiver.setSwitch(switchIndex, 1);
+    TEST_ASSERT_GREATER_THAN(500, receiver.getAuxiliaryChannel(switchIndex));
+
+    switchIndex = 3;
+    TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
+    TEST_ASSERT_EQUAL(0, receiver.getAuxiliaryChannel(switchIndex));
+    receiver.setSwitch(switchIndex, 1);
+    TEST_ASSERT_GREATER_THAN(500, receiver.getAuxiliaryChannel(switchIndex));
+}
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
@@ -75,6 +104,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 
     RUN_TEST(test_receiver_switches);
     RUN_TEST(test_receiver_controls);
+    RUN_TEST(test_receiver_auxiliary_channels);
 
     UNITY_END();
 }

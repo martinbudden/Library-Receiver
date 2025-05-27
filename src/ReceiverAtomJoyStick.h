@@ -14,7 +14,7 @@ private:
     ReceiverAtomJoyStick(ReceiverAtomJoyStick&&) = delete;
     ReceiverAtomJoyStick& operator=(ReceiverAtomJoyStick&&) = delete;
 public:
-    enum { MODE_SWITCH = 1, ALT_MODE_SWITCH = 2 };
+    enum { MODE_SWITCH = 1, ALT_MODE_SWITCH = 2, SWITCH_COUNT = 3 }; // switch count includes MOTOR_ON_OFF_SWITCH
     enum { MODE_STABLE = 0, MODE_SPORT = 1 };
     enum { ALT_MODE_AUTO = 4, ALT_MODE_MANUAL = 5};
 public:

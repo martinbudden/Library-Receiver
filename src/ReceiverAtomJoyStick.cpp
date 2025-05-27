@@ -8,7 +8,10 @@
 ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress) :
     _transceiver(macAddress),
     _received_data(&_packet[0], sizeof(_packet))
-    {}
+{
+    // switches are mapped to the auxiliary channels
+    _auxiliaryChannelCount = SWITCH_COUNT;
+}
 
 /*!
 Setup the receiver. Initialize the transceiver.
@@ -102,8 +105,21 @@ void ReceiverAtomJoyStick::broadcastMyEUI() const
 
 uint32_t ReceiverAtomJoyStick::getAuxiliaryChannel(size_t index) const
 {
-    (void)index;
-    return 0;
+    return (index >= _auxiliaryChannelCount) ? 0 : getSwitch(index) ? 2000 : 0;
+    uint32_t ret = 0;
+
+    enum { CHANNEL_HIGH = 2000 };
+    // map the switches to the auxiliary channels
+    switch(index) {
+    case MOTOR_ON_OFF_SWITCH:
+        [[fallthrough]];
+    case MODE_SWITCH:
+        [[fallthrough]];
+    case ALT_MODE_SWITCH:
+        ret = getSwitch(index) ? CHANNEL_HIGH : 0;
+        break;
+    }
+    return ret;
 }
 
 esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const

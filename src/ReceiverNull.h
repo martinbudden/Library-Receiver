@@ -6,7 +6,8 @@
 class ReceiverNull : public ReceiverBase {
 public:
     virtual ~ReceiverNull() = default;
-    ReceiverNull() = default;
+    explicit ReceiverNull(uint32_t auxiliaryChannelCount) { _auxiliaryChannelCount = auxiliaryChannelCount; }
+    ReceiverNull() : ReceiverNull(0) {}
 private:
     // ReceiverNull is not copyable or moveable
     ReceiverNull(const ReceiverNull&) = delete;
