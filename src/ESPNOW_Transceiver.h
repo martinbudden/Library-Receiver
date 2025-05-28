@@ -32,7 +32,7 @@ public:
         size_t len;
     };
     struct peer_data_t {
-        esp_now_peer_info_t peer_info { .peer_addr{0,0,0,0,0,0}, .lmk{0}, .channel=0, .ifidx=WIFI_IF_STA, .encrypt=false, .priv=nullptr };
+        esp_now_peer_info_t peer_info { .peer_addr={0,0,0,0,0,0}, .lmk={0}, .channel=0, .ifidx=WIFI_IF_STA, .encrypt=false, .priv=nullptr };
         received_data_t* receivedDataPtr {nullptr};
     };
 public:

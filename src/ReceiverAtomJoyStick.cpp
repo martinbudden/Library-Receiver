@@ -69,7 +69,7 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
         _newPacketAvailable = true;
         return true;
     }
-#if defined(USE_ARDUINO_ESP32)
+#if defined(USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
     Serial.printf("BadPacket\r\n");
 #endif
     // we've had a packet even though it is a bad one, so we haven't lost contact with the receiver
@@ -128,15 +128,18 @@ esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCou
     memcpy(&data[1 + ESP_NOW_ETH_ALEN], &peerCommand[0], sizeof(peerCommand));
 
     for (int ii = 0; ii < broadcastCount; ++ii) {
-        const esp_err_t err = _transceiver.broadcastData(&data[0], sizeof(data));
+        const esp_err_t err = _transceiver.broadcastData(&data[0], sizeof(data)); // NOLINT(cppcoreguidelines-init-variables) false positive
+        //  cppcheck-suppress knownConditionTrueFalse
         if (err != ESP_OK) {
-#if !defined(USE_ARDUINO_ESP32)
+#if defined(USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
             Serial.printf("broadcastMyMacAddressForBinding failed: %X\r\n", err);
 #endif
             return err;
         }
-#if !defined(FRAMEWORK_TEST)
+#if defined(USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
         delay(broadcastDelayMs); // delay() function has units of milliseconds
+#else
+        (void)broadcastDelayMs;
 #endif
     }
     return ESP_OK;

@@ -5,6 +5,7 @@
         "bugprone",
         "clangtidy",
         "cppcoreguidelines",
+        "ESPIDF",
         "ESPNOW",
         "hicpp",
         "ipch",

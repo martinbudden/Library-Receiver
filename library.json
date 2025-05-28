@@ -13,7 +13,7 @@
     "dependencies": [
     ],
     "license": "MIT",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "frameworks": "*",
     "platforms": "*",
     "headers": ["ESPNOW_Transceiver.h", "ReceiverAtomJoyStick.h", "ReceiverBase.h", "ReceiverNull.h", "ReceiverTelemetry.h", "ReceiverTelemetryData.h"]
