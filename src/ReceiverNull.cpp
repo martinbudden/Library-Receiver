@@ -45,6 +45,5 @@ void ReceiverNull::broadcastMyEUI() const
 uint32_t ReceiverNull::getAuxiliaryChannel(size_t index) const
 {
     // map switches to the auxiliary channels
-    enum { CHANNEL_HIGH = 2000 };
-    return (index >= _auxiliaryChannelCount) ? 0 : getSwitch(index) ? CHANNEL_HIGH : 0;
+    return (index >= _auxiliaryChannelCount) ? CHANNEL_LOW : getSwitch(index) ? CHANNEL_HIGH : CHANNEL_LOW;
 }

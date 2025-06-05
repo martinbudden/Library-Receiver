@@ -10,6 +10,7 @@ class ReceiverBase {
 public:
     enum { STICK_COUNT = 4 };
     enum { MOTOR_ON_OFF_SWITCH = 0 };
+    enum { CHANNEL_LOW =  1000, CHANNEL_HIGH = 2000 };
 public:
     struct EUI_48_t {
         uint8_t octet[6];

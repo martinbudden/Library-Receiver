@@ -111,8 +111,7 @@ void ReceiverAtomJoyStick::broadcastMyEUI() const
 
 uint32_t ReceiverAtomJoyStick::getAuxiliaryChannel(size_t index) const
 {
-    enum { CHANNEL_HIGH = 2000 };
-    return (index >= _auxiliaryChannelCount) ? 0 : getSwitch(index) ? CHANNEL_HIGH : 0;
+    return (index >= _auxiliaryChannelCount) ? CHANNEL_LOW : getSwitch(index) ? CHANNEL_HIGH : 0;
 }
 
 esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const // NOLINT(readability-convert-member-functions-to-static)
