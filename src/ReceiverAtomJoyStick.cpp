@@ -26,6 +26,11 @@ esp_err_t ReceiverAtomJoyStick::setup(uint8_t channel) // NOLINT(readability-con
 #endif
 }
 
+void ReceiverAtomJoyStick::WAIT_FOR_DATA_RECEIVED()
+{
+    _transceiver.WAIT_FOR_PRIMARY_DATA_RECEIVED();
+}
+
 /*!
 If a packet was received from the atomJoyStickReceiver then unpack it and inform the receiver target that new stick values are available.
 

@@ -23,6 +23,7 @@ public:
     };
 public:
     virtual ~ReceiverBase() = default;
+    virtual void WAIT_FOR_DATA_RECEIVED() = 0;
     virtual bool update(uint32_t tickCountDelta) = 0;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const = 0;
     // 48-bit Extended Unique Identifiers, usually the MAC address if the receiver has one, but may be an alternative provided by the receiver.
@@ -52,4 +53,9 @@ protected:
     uint32_t _switches {0}; // 16 2 or 3 positions switches, each using 2-bits
     controls_t _controls {}; //!< the main 4 channels
     uint32_t _auxiliaryChannelCount {0};
+};
+
+class ReceiverWatcher {
+public:
+    virtual void newReceiverPacketAvailable() = 0;
 };

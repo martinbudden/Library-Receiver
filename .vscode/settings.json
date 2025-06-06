@@ -9,6 +9,7 @@
         "ESPNOW",
         "hicpp",
         "ipch",
+        "IRAM",
         "libc",
         "llvmlibc",
         "noreturn",

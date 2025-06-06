@@ -1,6 +1,10 @@
 #include "ReceiverNull.h"
 
 
+void ReceiverNull::WAIT_FOR_DATA_RECEIVED()
+{
+}
+
 /*!
 If a packet was received then unpack it and inform the motor controller there are new stick values.
 

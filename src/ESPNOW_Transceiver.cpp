@@ -26,7 +26,7 @@ ESPNOW_Transceiver* ESPNOW_Transceiver::transceiver;
 /*!
 Callback when data is sent.
 */
-void ESPNOW_Transceiver::onDataSent(const uint8_t* macAddress, esp_now_send_status_t status) // NOLINT(readability-convert-member-functions-to-static) false positive
+IRAM_ATTR void ESPNOW_Transceiver::onDataSent(const uint8_t* macAddress, esp_now_send_status_t status) // NOLINT(readability-convert-member-functions-to-static) false positive
 {
     (void)macAddress;
     // status can be ESP_NOW_SEND_SUCCESS or ESP_NOW_SEND_FAIL
@@ -36,11 +36,11 @@ void ESPNOW_Transceiver::onDataSent(const uint8_t* macAddress, esp_now_send_stat
 /*!
 Callback when data is received.
 
-This runs in the high priority WiFi task, and so should not perform any lengthy operations.
+This is an ISR in the high priority WiFi task, and so should not perform any lengthy operations.
 
 Parameter `len` is `int` rather than `size_t` to match `esp_now_recv_cb_t` callback signature.
 */
-void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len) // NOLINT(readability-convert-member-functions-to-static) false positive
+IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len) // NOLINT(readability-convert-member-functions-to-static) false positive
 {
     if (!transceiver->isPrimaryPeerMacAddressSet()) {
         // If data is received when the primary peer MAC address is not yet set, it means we are in the binding process
@@ -53,7 +53,7 @@ void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t
 }
 #endif
 
-ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress)
+IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress)
 {
     transceiver = this;
     memcpy(&_myMacAddress[0], myMacAddress, ESP_NOW_ETH_ALEN);
@@ -62,6 +62,17 @@ ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress)
 #if defined(USE_ESPNOW)
 esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
 {
+#if defined(USE_FREERTOS)
+    _primaryDataReceivedQueue = xQueueCreateStatic(DATA_READY_QUEUE_LENGTH, sizeof(_primaryDataReceivedQueueItem), &_primaryDataReceivedQueueStorageArea[0], &_primaryDataReceivedQueueStatic);
+    configASSERT(_primaryDataReceivedQueue);
+    const UBaseType_t primaryMessageCount = uxQueueMessagesWaiting(_primaryDataReceivedQueue);
+    assert(primaryMessageCount == 0);
+
+    _secondaryDataReceivedQueue = xQueueCreateStatic(DATA_READY_QUEUE_LENGTH, sizeof(_secondaryDataReceivedQueueItem), &_secondaryDataReceivedQueueStorageArea[0], &_secondaryDataReceivedQueueStatic);
+    configASSERT(_secondaryDataReceivedQueue);
+    const UBaseType_t secondaryMessageCount = uxQueueMessagesWaiting(_secondaryDataReceivedQueue);
+    assert(secondaryMessageCount == 0);
+#endif
     esp_err_t err = esp_now_init();
     if (err != ESP_OK) {
         Serial.printf("esp_now_init failed: 0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE);
@@ -89,7 +100,7 @@ esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
     return ESP_OK;
 }
 
-esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, uint8_t channel, const uint8_t* primaryMacAddress)
+IRAM_ATTR esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, uint8_t channel, const uint8_t* primaryMacAddress)
 {
     //Serial.printf("ESPNOW_Transceiver::init received data: %x, %d\r\n", received_data.bufferPtr, received_data.bufferSize);
     const esp_err_t err = init(channel);
@@ -111,7 +122,7 @@ esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, uint8_t chann
     return ESP_OK;
 }
 
-esp_err_t ESPNOW_Transceiver::addBroadcastPeer(uint8_t channel)
+IRAM_ATTR esp_err_t ESPNOW_Transceiver::addBroadcastPeer(uint8_t channel)
 {
     // set receivedDataPtr to nullptr so no broadcast data is copied
     _peerData[BROADCAST_PEER].receivedDataPtr = nullptr;
@@ -132,7 +143,7 @@ esp_err_t ESPNOW_Transceiver::addBroadcastPeer(uint8_t channel)
     return err;
 }
 
-esp_err_t ESPNOW_Transceiver::addSecondaryPeer(received_data_t& received_data, const uint8_t* macAddress)
+IRAM_ATTR esp_err_t ESPNOW_Transceiver::addSecondaryPeer(received_data_t& received_data, const uint8_t* macAddress)
 {
     received_data.len = 0;
     _peerData[PEER_2].receivedDataPtr = &received_data;
@@ -152,12 +163,12 @@ esp_err_t ESPNOW_Transceiver::addSecondaryPeer(received_data_t& received_data, c
     return ESP_OK;
 }
 
-bool ESPNOW_Transceiver::isPrimaryPeerMacAddressSet() const
+IRAM_ATTR bool ESPNOW_Transceiver::isPrimaryPeerMacAddressSet() const
 {
     return _isPrimaryPeerMacAddressSet; // NOLINT(readability-implicit-bool-conversion)
 }
 
-bool ESPNOW_Transceiver::macAddressIsBroadCastMacAddress(const uint8_t* macAddress) const
+IRAM_ATTR bool ESPNOW_Transceiver::macAddressIsBroadCastMacAddress(const uint8_t* macAddress) const
 {
     if (_peerCount > 0) {
         // check this is not the broadcast MAC address
@@ -168,7 +179,7 @@ bool ESPNOW_Transceiver::macAddressIsBroadCastMacAddress(const uint8_t* macAddre
     return false;
 }
 
-bool ESPNOW_Transceiver::macAddressIsSecondaryPeerMacAddress(const uint8_t* macAddress) const
+IRAM_ATTR bool ESPNOW_Transceiver::macAddressIsSecondaryPeerMacAddress(const uint8_t* macAddress) const
 {
     if (_peerCount > 2) {
         // the secondary peer has been set, so compare the MAC address with that of the secondary peer.
@@ -179,7 +190,7 @@ bool ESPNOW_Transceiver::macAddressIsSecondaryPeerMacAddress(const uint8_t* macA
     return false;
 }
 
-esp_err_t ESPNOW_Transceiver::setPrimaryPeerMacAddress(const uint8_t* macAddress)
+IRAM_ATTR esp_err_t ESPNOW_Transceiver::setPrimaryPeerMacAddress(const uint8_t* macAddress)
 {
     memcpy(_peerData[PRIMARY_PEER].peer_info.peer_addr, macAddress, ESP_NOW_ETH_ALEN);
 
@@ -196,7 +207,7 @@ esp_err_t ESPNOW_Transceiver::setPrimaryPeerMacAddress(const uint8_t* macAddress
     return err;
 }
 
-bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAddress, const uint8_t* data, size_t len) // NOLINT(readability-make-member-function-const) false positive
+IRAM_ATTR bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAddress, const uint8_t* data, size_t len) // NOLINT(readability-make-member-function-const) false positive
 {
     esp_now_peer_info_t peerInfo;
     const esp_err_t err = esp_now_get_peer(macAddress, &peerInfo);
@@ -217,6 +228,9 @@ bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAddress, con
                 const TickType_t tickCount = xTaskGetTickCount();
                 _tickCountDelta = tickCount - _tickCountPrevious;
                 _tickCountPrevious = tickCount;
+                SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR();
+            } else if (ii == SECONDARY_PEER) {
+                SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR();
             }
             // copy the received data into the _peerData buffer
             const size_t copyLength = std::min(len, peerData.receivedDataPtr->bufferSize); // so don't overwrite buffer
@@ -229,7 +243,7 @@ bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAddress, con
     return false;
 }
 
-esp_err_t ESPNOW_Transceiver::sendData(const uint8_t* data, size_t len) const
+IRAM_ATTR esp_err_t ESPNOW_Transceiver::sendData(const uint8_t* data, size_t len) const
 {
     //const uint8_t* ma = _transmitMacAddress;
     //Serial.printf("sendData MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n", ma[0], ma[1], ma[2], ma[3], ma[4], ma[5]);
@@ -243,7 +257,7 @@ esp_err_t ESPNOW_Transceiver::sendData(const uint8_t* data, size_t len) const
     return err;
 }
 
-esp_err_t ESPNOW_Transceiver::sendDataSecondary(const uint8_t* data, size_t len) const
+IRAM_ATTR esp_err_t ESPNOW_Transceiver::sendDataSecondary(const uint8_t* data, size_t len) const
 {
     //const uint8_t* ma = _peerData[SECONDARY_PEER].peer_info.peer_addr;
     //Serial.printf("sendDataSecondary MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n", ma[0], ma[1], ma[2], ma[3], ma[4], ma[5]);

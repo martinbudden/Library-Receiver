@@ -20,6 +20,7 @@ public:
 public:
     esp_err_t setup(uint8_t channel);
 
+    virtual void WAIT_FOR_DATA_RECEIVED() override;
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual EUI_48_t getMyEUI() const override;
