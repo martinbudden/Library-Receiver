@@ -29,7 +29,7 @@ public:
     uint32_t getAuxiliaryChannel(size_t index) const override;
 
     ESPNOW_Transceiver& getESPNOW_Transceiver() { return _transceiver; }
-    static int32_t ubyte4float_to_Q4dot12(const uint8_t f[4]);
+    static int32_t ubyte4float_to_Q12dot4(const uint8_t f[4]);
 private:
     // from AtomJoyStickReceiver
     inline bool isPacketEmpty() const { return _received_data.len == 0 ? true : false;  }
@@ -45,9 +45,9 @@ private:
     int32_t normalizedStick(int stickIndex) const;
 private:
     struct stick_t {
-        int32_t rawQ4dot12 {0};
-        int32_t biasQ4dot12 {0};
-        int32_t deadbandQ4dot12 {16}; // last 4 bits of number
+        int32_t rawQ12dot4 {0};
+        int32_t biasQ12dot4 {0};
+        int32_t deadbandQ12dot4 {16}; // last 4 bits of number
     };
 private:
     ESPNOW_Transceiver _transceiver;

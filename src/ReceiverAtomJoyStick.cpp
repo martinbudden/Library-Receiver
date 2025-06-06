@@ -61,10 +61,10 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
         }
 
         // Save the stick values.
-        _controls.throttleStickQ4dot12 = normalizedStick(THROTTLE);
-        _controls.rollStickQ4dot12 = normalizedStick(ROLL);
-        _controls.pitchStickQ4dot12 = normalizedStick(PITCH);
-        _controls.yawStickQ4dot12 = normalizedStick(YAW);
+        _controls.throttleStickQ12dot4 = normalizedStick(THROTTLE);
+        _controls.rollStickQ12dot4 = normalizedStick(ROLL);
+        _controls.pitchStickQ12dot4 = normalizedStick(PITCH);
+        _controls.yawStickQ12dot4 = normalizedStick(YAW);
 
         // Save the button values.
         setSwitch(MOTOR_ON_OFF_SWITCH, _flipButton);
@@ -82,17 +82,17 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
 }
 
 /*!
-Maps the joystick values from Q4dot12 format in the range [-2048, 2047] to floats in the range [-1, 1].
+Maps the joystick values from Q12dot4 format in the range [-2048, 2047] to floats in the range [-1, 1].
 
 NOTE: this function runs in the context of the MotorPairController task, in particular the FPU usage is in that context, so this avoids the
 need to save the ESP32 FPU registers on a context switch.
 */
 void ReceiverAtomJoyStick::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
 {
-    throttleStick = Q4dot12_to_float(_controls.throttleStickQ4dot12);
-    rollStick = Q4dot12_to_float(_controls.rollStickQ4dot12);
-    pitchStick = Q4dot12_to_float(_controls.pitchStickQ4dot12);
-    yawStick = Q4dot12_to_float(_controls.yawStickQ4dot12);
+    throttleStick = Q12dot4_to_float(_controls.throttleStickQ12dot4);
+    rollStick = Q12dot4_to_float(_controls.rollStickQ12dot4);
+    pitchStick = Q12dot4_to_float(_controls.pitchStickQ12dot4);
+    yawStick = Q12dot4_to_float(_controls.yawStickQ12dot4);
 }
 
 ReceiverBase::EUI_48_t ReceiverAtomJoyStick::getMyEUI() const
@@ -150,9 +150,9 @@ esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCou
 }
 
 /*!
-Convert the 4 bytes of a floating point number to a fixed point integer in Q4dot12 format, ie in range [-2048,2047].
+Convert the 4 bytes of a floating point number to a fixed point integer in Q12dot4 format, ie in range [-2048,2047].
 */
-int32_t ReceiverAtomJoyStick::ubyte4float_to_Q4dot12(const uint8_t f[4]) // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+int32_t ReceiverAtomJoyStick::ubyte4float_to_Q12dot4(const uint8_t f[4]) // NOLINT(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
 {
     union bi_t { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
         std::array<uint8_t, 4> b;
@@ -210,10 +210,10 @@ bool ReceiverAtomJoyStick::unpackPacket(checkPacket_t checkPacket)
         //Serial.printf("my:     %02X:%02X:%02X\r\n", macAddress[3], macAddress[4], macAddress[5]);
     }
 
-    _sticks[YAW].rawQ4dot12 = ubyte4float_to_Q4dot12(&_packet[3]); // cppcheck-suppress invalidPointerCast
-    _sticks[THROTTLE].rawQ4dot12 = ubyte4float_to_Q4dot12(&_packet[7]); // cppcheck-suppress invalidPointerCast
-    _sticks[ROLL].rawQ4dot12 = ubyte4float_to_Q4dot12(&_packet[11]); // cppcheck-suppress invalidPointerCast
-    _sticks[PITCH].rawQ4dot12 = -ubyte4float_to_Q4dot12(&_packet[15]); // cppcheck-suppress invalidPointerCast
+    _sticks[YAW].rawQ12dot4 = ubyte4float_to_Q12dot4(&_packet[3]); // cppcheck-suppress invalidPointerCast
+    _sticks[THROTTLE].rawQ12dot4 = ubyte4float_to_Q12dot4(&_packet[7]); // cppcheck-suppress invalidPointerCast
+    _sticks[ROLL].rawQ12dot4 = ubyte4float_to_Q12dot4(&_packet[11]); // cppcheck-suppress invalidPointerCast
+    _sticks[PITCH].rawQ12dot4 = -ubyte4float_to_Q12dot4(&_packet[15]); // cppcheck-suppress invalidPointerCast
 
     _armButton = _packet[19];
     _flipButton = _packet[20];
@@ -230,7 +230,7 @@ void ReceiverAtomJoyStick::setCurrentReadingsToBias()
 {
     _biasIsSet = static_cast<int>(true);
     for (auto& stick : _sticks) {
-        stick.biasQ4dot12 = stick.rawQ4dot12;
+        stick.biasQ12dot4 = stick.rawQ12dot4;
     }
 }
 
@@ -238,15 +238,15 @@ int32_t ReceiverAtomJoyStick::normalizedStick(int stickIndex) const
 {
     const stick_t stick = _sticks[stickIndex];
     if (!_biasIsSet) {
-        return stick.rawQ4dot12;
+        return stick.rawQ12dot4;
     }
 
-    const int32_t ret = stick.rawQ4dot12 - stick.biasQ4dot12;
-    if (ret < -stick.deadbandQ4dot12) {
-        return -(-stick.deadbandQ4dot12 - ret); // (stick.bias - stick.deadband/2 - min);
+    const int32_t ret = stick.rawQ12dot4 - stick.biasQ12dot4;
+    if (ret < -stick.deadbandQ12dot4) {
+        return -(-stick.deadbandQ12dot4 - ret); // (stick.bias - stick.deadband/2 - min);
     }
-    if (ret > stick.deadbandQ4dot12) {
-        return (ret - stick.deadbandQ4dot12); // (max - stick.bias - stick.deadband/2);
+    if (ret > stick.deadbandQ12dot4) {
+        return (ret - stick.deadbandQ12dot4); // (max - stick.bias - stick.deadband/2);
     }
     return 0.0F;
 }
@@ -255,14 +255,14 @@ void ReceiverAtomJoyStick::resetSticks()
 {
     _biasIsSet = static_cast<int>(false);
     for (auto& stick : _sticks) {
-        stick.biasQ4dot12 = 0;
-        stick.deadbandQ4dot12 = 0;
+        stick.biasQ12dot4 = 0;
+        stick.deadbandQ12dot4 = 0;
     }
 }
 
-void ReceiverAtomJoyStick::setDeadband(int32_t deadbandQ4dot12)
+void ReceiverAtomJoyStick::setDeadband(int32_t deadbandQ12dot4)
 {
     for (auto& stick : _sticks) {
-        stick.deadbandQ4dot12 = deadbandQ4dot12;
+        stick.deadbandQ12dot4 = deadbandQ12dot4;
     }
 }

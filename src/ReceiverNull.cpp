@@ -24,10 +24,10 @@ bool ReceiverNull::update([[maybe_unused]] uint32_t tickCountDelta)
 
 void ReceiverNull::getStickValues(float&  throttleStick, float&  rollStick, float&  pitchStick, float&  yawStick) const
 {
-    throttleStick = Q4dot12_to_float(_controls.throttleStickQ4dot12);
-    rollStick = Q4dot12_to_float(_controls.rollStickQ4dot12);
-    pitchStick = Q4dot12_to_float(_controls.pitchStickQ4dot12);
-    yawStick = Q4dot12_to_float(_controls.yawStickQ4dot12);
+    throttleStick = Q12dot4_to_float(_controls.throttleStickQ12dot4);
+    rollStick = Q12dot4_to_float(_controls.rollStickQ12dot4);
+    pitchStick = Q12dot4_to_float(_controls.pitchStickQ12dot4);
+    yawStick = Q12dot4_to_float(_controls.yawStickQ12dot4);
 }
 
 ReceiverBase::EUI_48_t ReceiverNull::getMyEUI() const
