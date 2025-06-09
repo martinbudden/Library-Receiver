@@ -56,7 +56,7 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
 
     if (unpackPacket(CHECK_PACKET)) {
         if (_packetCount == 5) { // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-            // set the JoyStick bias so that the current readings are zero.
+            // set the bias so that the current readings are zero.
             setCurrentReadingsToBias();
         }
 
@@ -71,6 +71,8 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
         setSwitch(MODE_SWITCH, _mode);
         setSwitch(ALT_MODE_SWITCH, _altMode == 4 ? 0 : 1); // _altMode has a value of 4 or 5
 
+        // now we have copied all the packet values, set the _newPacketAvailable flag
+        // NOTE: there is no mutex around this flag
         _newPacketAvailable = true;
         return true;
     }
