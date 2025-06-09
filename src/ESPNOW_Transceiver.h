@@ -91,7 +91,7 @@ private:
     std::array<peer_data_t, MAX_PEER_COUNT> _peerData;
     esp_now_send_status_t _sendStatus {ESP_NOW_SEND_SUCCESS};
     std::array<uint8_t, ESP_NOW_ETH_ALEN + 2> _myMacAddress {0, 0, 0, 0, 0, 0, 0, 0};
-#if defined(USE_ESPNOW)
+#if defined(USE_ESPNOW) && defined(USE_FREERTOS)
     enum { DATA_READY_QUEUE_LENGTH = 2};
     mutable uint32_t _primaryDataReceivedQueueItem {}; // this is just a dummy item whose value is not used
     std::array<uint8_t, DATA_READY_QUEUE_LENGTH * sizeof(_primaryDataReceivedQueueItem)> _primaryDataReceivedQueueStorageArea {};
@@ -109,8 +109,8 @@ public:
 #else
 public:
     inline void WAIT_FOR_PRIMARY_DATA_RECEIVED() const {}
-    inline void SIGNAL_PRIMARY_DATA_RECEIVED() const {}
+    inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() const {}
     inline void WAIT_FOR_SECONDARY_DATA_RECEIVED() const {}
-    inline void SIGNAL_SECONDARY_DATA_RECEIVED() const {}
+    inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() const {}
 #endif
 };
