@@ -11,10 +11,14 @@
         "url": "https://github.com/martinbudden/Library-Reciver.git"
     },
     "dependencies": [
+        {
+            "name": "martinbudden/TaskBase",
+            "version": "^0.0.1"
+        }
     ],
     "license": "MIT",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "frameworks": "*",
     "platforms": "*",
-    "headers": ["ESPNOW_Transceiver.h", "ReceiverAtomJoyStick.h", "ReceiverBase.h", "ReceiverNull.h", "ReceiverTelemetry.h", "ReceiverTelemetryData.h"]
+    "headers": ["ESPNOW_Transceiver.h", "ReceiverAtomJoyStick.h", "ReceiverBase.h", "ReceiverNull.h", "ReceiverTask.h", "ReceiverTelemetry.h", "ReceiverTelemetryData.h"]
 }

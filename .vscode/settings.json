@@ -12,6 +12,7 @@
         "IRAM",
         "libc",
         "llvmlibc",
+        "martinbudden",
         "noreturn",
         "pioenvs",
         "suppr",

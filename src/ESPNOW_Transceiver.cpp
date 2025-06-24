@@ -57,11 +57,6 @@ IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress)
 {
     transceiver = this;
     memcpy(&_myMacAddress[0], myMacAddress, ESP_NOW_ETH_ALEN);
-}
-
-#if defined(USE_ESPNOW)
-esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
-{
 #if defined(USE_FREERTOS)
     _primaryDataReceivedQueue = xQueueCreateStatic(DATA_READY_QUEUE_LENGTH, sizeof(_primaryDataReceivedQueueItem), &_primaryDataReceivedQueueStorageArea[0], &_primaryDataReceivedQueueStatic);
     configASSERT(_primaryDataReceivedQueue);
@@ -73,14 +68,19 @@ esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
     const UBaseType_t secondaryMessageCount = uxQueueMessagesWaiting(_secondaryDataReceivedQueue);
     assert(secondaryMessageCount == 0);
 #endif
+}
+
+#if defined(USE_ESPNOW)
+esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
+{
     esp_err_t err = esp_now_init();
     if (err != ESP_OK) {
-        Serial.printf("esp_now_init failed: 0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE);
+        Serial.printf("!!!! esp_now_init failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
     }
     err = esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
     if (err != ESP_OK) {
-        Serial.printf("esp_wifi_set_channel failed: 0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE);
+        Serial.printf("!!!! esp_wifi_set_channel failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
     }
     err = addBroadcastPeer(channel);
@@ -89,12 +89,12 @@ esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
     }
     err = esp_now_register_recv_cb(ESPNOW_Transceiver::onDataReceived);
     if (err != ESP_OK) {
-        Serial.printf("esp_now_register_recv_cb failed: 0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE);
+        Serial.printf("!!!! esp_now_register_recv_cb failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
     }
     err = esp_now_register_send_cb(ESPNOW_Transceiver::onDataSent);
     if (err != ESP_OK) {
-        Serial.printf("esp_now_register_send_cb failed: %X\r\n", err);
+        Serial.printf("!!!! esp_now_register_send_cb failed: %X\r\n\r\n", err);
         return err;
     }
     return ESP_OK;
@@ -132,7 +132,7 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::addBroadcastPeer(uint8_t channel)
 
     const esp_err_t err = esp_now_add_peer(&_peerData[BROADCAST_PEER].peer_info);
     if (err != ESP_OK) {
-        Serial.printf("addBroadcastPeer esp_now_add_peer failed: 0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE);
+        Serial.printf("!!!! addBroadcastPeer esp_now_add_peer failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
     }
 
@@ -155,7 +155,7 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::addSecondaryPeer(received_data_t& receiv
 
     const esp_err_t err = esp_now_add_peer(&_peerData[PEER_2].peer_info);
     if (err != ESP_OK) {
-        Serial.printf("addSecondaryPeer esp_now_add_peer failed: 0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE);
+        Serial.printf("!!!! addSecondaryPeer - esp_now_add_peer failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
     }
 
@@ -202,11 +202,14 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::setPrimaryPeerMacAddress(const uint8_t* 
 
     const esp_err_t err = esp_now_add_peer(&_peerData[PRIMARY_PEER].peer_info);
     if (err != ESP_OK) {
-        Serial.printf("setTransmitMacAddress esp_now_add_peer failed: 0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE);
+        Serial.printf("!!!! setPrimaryPeerMacAddress() esp_now_add_peer failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
     }
     return err;
 }
 
+/*!
+This function is called from within onDataReceived, which is called within an ISR
+*/
 IRAM_ATTR bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAddress, const uint8_t* data, size_t len) // NOLINT(readability-make-member-function-const) false positive
 {
     esp_now_peer_info_t peerInfo;
@@ -216,13 +219,18 @@ IRAM_ATTR bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAd
         return false;
     }
     if (err != ESP_OK) {
-        Serial.printf("copyReceivedDataToBuffer esp_now_get_peer failed: 0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE);
+        Serial.printf("!!!! copyReceivedDataToBuffer esp_now_get_peer failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return false;
     }
 
     for (size_t ii = PRIMARY_PEER; ii < _peerCount; ++ii) {
         const auto& peerData = _peerData[ii];
         if (memcmp(macAddress, peerData.peer_info.peer_addr, ESP_NOW_ETH_ALEN) == 0) {
+            // copy the received data into the _peerData buffer
+            const size_t copyLength = std::min(len, peerData.receivedDataPtr->bufferSize); // so don't overwrite buffer
+            memcpy(peerData.receivedDataPtr->bufferPtr, data, copyLength);
+            // and set the _peerData length
+            peerData.receivedDataPtr->len = copyLength;
             if (ii == PRIMARY_PEER) {
                 ++_receivedPacketCount; // only count packets being sent to the primary peer
                 const TickType_t tickCount = xTaskGetTickCount();
@@ -232,11 +240,6 @@ IRAM_ATTR bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAd
             } else if (ii == SECONDARY_PEER) {
                 SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR();
             }
-            // copy the received data into the _peerData buffer
-            const size_t copyLength = std::min(len, peerData.receivedDataPtr->bufferSize); // so don't overwrite buffer
-            memcpy(peerData.receivedDataPtr->bufferPtr, data, copyLength);
-            // and set the _peerData length
-            peerData.receivedDataPtr->len = copyLength;
             return true;
         }
     }
@@ -253,7 +256,7 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::sendData(const uint8_t* data, size_t len
         return ESP_FAIL;
     }
     const esp_err_t err = esp_now_send(_peerData[PRIMARY_PEER].peer_info.peer_addr, data, len);
-    //if (err != ESP_OK) { Serial.printf("sendData err:0x%X (0x%X)\r\n", err, err - ESP_ERR_ESPNOW_BASE); }
+    //if (err != ESP_OK) { Serial.printf("!!!! sendData err:0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE); }
     return err;
 }
 
@@ -267,7 +270,7 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::sendDataSecondary(const uint8_t* data, s
         return ESP_FAIL;
     }
     const esp_err_t err = esp_now_send(_peerData[SECONDARY_PEER].peer_info.peer_addr, data, len);
-    //if (err != ESP_OK) { Serial.printf("sendDataSecondary err:0x%X (0x%x)\r\n", err, err - ESP_ERR_ESPNOW_BASE); }
+    //if (err != ESP_OK) { Serial.printf("!!!! sendDataSecondary err:0x%X (0x%x)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE); }
     return err;
 }
 
