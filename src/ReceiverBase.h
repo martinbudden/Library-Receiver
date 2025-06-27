@@ -10,16 +10,25 @@ class ReceiverBase {
 public:
     enum { STICK_COUNT = 4 };
     enum { MOTOR_ON_OFF_SWITCH = 0 };
-    enum { CHANNEL_LOW =  1000, CHANNEL_HIGH = 2000 };
+    enum { CHANNEL_LOW =  1000, CHANNEL_HIGH = 2000, CHANNEL_MIDDLE = 1500 };
 public:
+     //! 48-bit extended unique identifier (often synonymous with MAC address)
     struct EUI_48_t {
         uint8_t octet[6];
-    }; //!< 48-bit extended unique identifier (often synonymous with MAC address)
+    };
+     //! unscaled control values from receiver as Q12.4 fixed point integer, ie in range [-2048, 2047]
     struct controls_t {
-        int32_t throttleStickQ12dot4; //<! unscaled throttle value from receiver as Q12.4 fixed point integer, ie in range [-2048, 2047]
+        int32_t throttleStickQ12dot4;
         int32_t rollStickQ12dot4;
         int32_t pitchStickQ12dot4;
         int32_t yawStickQ12dot4;
+    };
+    //! controls mapped to the Pulse Width Modulation (PWM) range [1000, 2000]
+    struct controls_pwm_t {
+        uint16_t throttleStick;
+        uint16_t rollStick;
+        uint16_t pitchStick;
+        uint16_t yawStick;
     };
 public:
     virtual ~ReceiverBase() = default;
@@ -35,6 +44,14 @@ public:
     virtual uint32_t getAuxiliaryChannel(size_t index) const = 0;
 
     inline controls_t getControls() const { return _controls; }
+    controls_pwm_t getControlsPWM() const {
+        return controls_pwm_t {
+            .throttleStick = static_cast<uint16_t>((_controls.throttleStickQ12dot4 >> 2) + CHANNEL_MIDDLE),
+            .rollStick = static_cast<uint16_t>((_controls.rollStickQ12dot4 >> 2) + CHANNEL_MIDDLE),
+            .pitchStick = static_cast<uint16_t>((_controls.pitchStickQ12dot4 >> 2) + CHANNEL_MIDDLE),
+            .yawStick = static_cast<uint16_t>((_controls.yawStickQ12dot4 >> 2) + CHANNEL_MIDDLE)
+        };
+    }
     inline uint32_t getSwitch(size_t index) const { return (_switches & (0b11U << (2*index))) >> (2*index); }
     inline void setSwitch(size_t index, uint8_t value) { _switches &= ~(0b11U << (2*index)); _switches |= (value & 0b11U) << (2*index); }
     inline uint32_t getSwitches() const { return _switches; }

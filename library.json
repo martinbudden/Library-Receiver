@@ -13,11 +13,11 @@
     "dependencies": [
         {
             "name": "martinbudden/TaskBase",
-            "version": "^0.0.1"
+            "version": "^0.0.2"
         }
     ],
     "license": "MIT",
-    "version": "0.3.3",
+    "version": "0.3.4",
     "frameworks": "*",
     "platforms": "*",
     "headers": ["ESPNOW_Transceiver.h", "ReceiverAtomJoyStick.h", "ReceiverBase.h", "ReceiverNull.h", "ReceiverTask.h", "ReceiverTelemetry.h", "ReceiverTelemetryData.h"]
