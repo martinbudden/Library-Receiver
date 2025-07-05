@@ -1,10 +1,13 @@
 #include "ReceiverTask.h"
-#include "ReceiverBase.h"
+#include "RadioControllerBase.h"
+
 #include <TimeMicroSeconds.h>
 
-ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroSeconds, ReceiverBase& receiver, ReceiverWatcher* receiverWatcher) :
+
+ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroSeconds, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher) :
     TaskBase(taskIntervalMicroSeconds),
     _receiver(receiver),
+    _radioController(radioController),
     _receiverWatcher(receiverWatcher)
 {
 }
@@ -26,12 +29,18 @@ void ReceiverTask::loop()
 
     _tickCountDelta = tickCount - _tickCountPrevious;
     _tickCountPrevious = tickCount;
-    if (_tickCountDelta > 0) { // guard against the case of this while loop executing twice on the same tick interval
-        const bool newPacketAvailable = _receiver.update(_tickCountDelta); // NOLINT(cppcoreguidelines-init-variables) false positive
-        if (newPacketAvailable && _receiverWatcher) {
-            // if there is a new packet and a watcher, then let the watcher know.
+
+    if (_receiver.update(_tickCountDelta)) {
+        RadioControllerBase::controls_t controls; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+        controls.tickCount = tickCount;
+        _receiver.getStickValues(controls.throttleStick, controls.rollStick, controls.pitchStick, controls.yawStick);
+        _radioController.updateControls(controls);
+        // if there a watcher, then let it know there is a new packet
+        if (_receiverWatcher) {
             _receiverWatcher->newReceiverPacketAvailable();
         }
+    } else {
+        _radioController.checkFailsafe(tickCount);
     }
 }
 
