@@ -3,6 +3,11 @@
 
 #include <TimeMicroSeconds.h>
 
+#if defined(USE_FREERTOS)
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#endif
+
 
 ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroSeconds, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher) :
     TaskBase(taskIntervalMicroSeconds),
