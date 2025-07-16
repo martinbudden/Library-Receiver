@@ -26,9 +26,14 @@ esp_err_t ReceiverAtomJoyStick::setup(uint8_t channel) // NOLINT(readability-con
 #endif
 }
 
-void ReceiverAtomJoyStick::WAIT_FOR_DATA_RECEIVED()
+int32_t ReceiverAtomJoyStick::WAIT_FOR_DATA_RECEIVED()
 {
-    _transceiver.WAIT_FOR_PRIMARY_DATA_RECEIVED();
+    return _transceiver.WAIT_FOR_PRIMARY_DATA_RECEIVED();
+}
+
+int32_t ReceiverAtomJoyStick::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
+{
+    return _transceiver.WAIT_FOR_PRIMARY_DATA_RECEIVED(ticksToWait);
 }
 
 /*!

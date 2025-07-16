@@ -1,8 +1,15 @@
 #include "ReceiverNull.h"
 
 
-void ReceiverNull::WAIT_FOR_DATA_RECEIVED()
+int32_t ReceiverNull::WAIT_FOR_DATA_RECEIVED()
 {
+    return 0;
+}
+
+int32_t ReceiverNull::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
+{
+    (void)ticksToWait;
+    return 0;
 }
 
 /*!

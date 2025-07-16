@@ -70,8 +70,13 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
     }
 #else
     while (true) {
-        _receiver.WAIT_FOR_DATA_RECEIVED();
-        loop();
+        const uint32_t ticksToWait = _radioController.getTimeoutTicks();
+        if (_receiver.WAIT_FOR_DATA_RECEIVED(ticksToWait) == pdPASS) {
+            loop();
+        } else {
+            // WAIT timed out, so check failsafe
+            _radioController.checkFailsafe(xTaskGetTickCount());
+        }
     }
 #endif // RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN
 #else

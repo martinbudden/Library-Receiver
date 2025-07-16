@@ -15,7 +15,8 @@ private:
     ReceiverNull(ReceiverNull&&) = delete;
     ReceiverNull& operator=(ReceiverNull&&) = delete;
 public:
-    virtual void WAIT_FOR_DATA_RECEIVED() override;
+    virtual int32_t WAIT_FOR_DATA_RECEIVED() override;
+    virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) override;
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual EUI_48_t getMyEUI() const override;
