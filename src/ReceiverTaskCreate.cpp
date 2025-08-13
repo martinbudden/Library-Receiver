@@ -19,7 +19,7 @@
 
 ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID)
 {
-#if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
+#if defined(USE_RECEIVER_TASK_TIME_BASED_SCHEDULING)
     assert(false && "Task interval not specified for ReceiverTask");
 #endif
     return createTask(receiver, radioController, receiverWatcher, priority, coreID, 0);
@@ -27,7 +27,7 @@ ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBa
 
 ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID) // NOLINT(readability-convert-member-functions-to-static)
 {
-#if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
+#if defined(USE_RECEIVER_TASK_TIME_BASED_SCHEDULING)
     assert(false && "Task interval not specified for ReceiverTask");
 #endif
     return createTask(taskInfo, receiver, radioController, receiverWatcher, priority, coreID, 0);
@@ -45,7 +45,7 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
 
 #if defined(USE_FREERTOS)
 #if defined(USE_DEBUG_PRINTF_TASK_INFORMATION)
-#if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
+#if defined(USE_RECEIVER_TASK_TIME_BASED_SCHEDULING)
     Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
 #else
     Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
@@ -63,7 +63,7 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
     taskInfo = {
         .taskHandle = nullptr,
         .name = "ReceiverTask", // max length 16, including zero terminator
-        .stackDepth = RECEIVER_TASK_STACK_DEPTH_BYTES,
+        .stackDepth = RECEIVER_TASK_STACK_DEPTH_BYTES / sizeof(StackType_t),
         .stackBuffer = &stack[0],
         .priority = priority,
         .coreID = coreID,

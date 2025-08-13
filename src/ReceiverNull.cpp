@@ -17,8 +17,10 @@ If a packet was received then unpack it and inform the motor controller there ar
 
 Returns true if a packet has been received.
 */
-bool ReceiverNull::update([[maybe_unused]] uint32_t tickCountDelta)
+bool ReceiverNull::update(uint32_t tickCountDelta)
 {
+    (void)tickCountDelta;
+
     ++_packetCount;
     _droppedPacketCount = static_cast<int32_t>(_receivedPacketCount - _packetCount);
     _droppedPacketCountDelta = _droppedPacketCount - _droppedPacketCountPrevious;

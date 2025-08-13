@@ -56,7 +56,7 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
 {
 #if defined(USE_FREERTOS)
 
-#if defined(RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN)
+#if defined(USE_RECEIVER_TASK_TIME_BASED_SCHEDULING)
     // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
     const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
     assert(taskIntervalTicks > 0 && "ReceiverTask taskIntervalTicks is zero.");
@@ -78,7 +78,7 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
             _radioController.checkFailsafe(xTaskGetTickCount());
         }
     }
-#endif // RECEIVER_TASK_IS_NOT_INTERRUPT_DRIVEN
+#endif // USE_RECEIVER_TASK_TIME_BASED_SCHEDULING
 #else
     while (true) {}
 #endif // USE_FREERTOS
