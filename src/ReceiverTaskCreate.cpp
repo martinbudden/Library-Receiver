@@ -63,7 +63,7 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
     taskInfo = {
         .taskHandle = nullptr,
         .name = "ReceiverTask", // max length 16, including zero terminator
-        .stackDepth = RECEIVER_TASK_STACK_DEPTH_BYTES / sizeof(StackType_t),
+        .stackDepth = RECEIVER_TASK_STACK_DEPTH_BYTES,
         .stackBuffer = &stack[0],
         .priority = priority,
         .coreID = coreID,
@@ -74,7 +74,7 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
     taskInfo.taskHandle = xTaskCreateStaticPinnedToCore(
         ReceiverTask::Task,
         taskInfo.name,
-        taskInfo.stackDepth,
+        taskInfo.stackDepth / sizeof(StackType_t),
         &taskParameters,
         taskInfo.priority,
         taskInfo.stackBuffer,
