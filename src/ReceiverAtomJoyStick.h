@@ -6,7 +6,7 @@
 
 class ReceiverAtomJoyStick : public ReceiverBase {
 public:
-    explicit ReceiverAtomJoyStick(const uint8_t* macAddress);
+    explicit ReceiverAtomJoyStick(const uint8_t* macAddress, uint8_t channel);
 private:
     // Receiver is not copyable or moveable
     ReceiverAtomJoyStick(const ReceiverAtomJoyStick&) = delete;
@@ -18,9 +18,8 @@ public:
     enum { MODE_STABLE = 0, MODE_SPORT = 1 };
     enum { ALT_MODE_AUTO = 4, ALT_MODE_MANUAL = 5};
 public:
-    esp_err_t setup(uint8_t channel);
+    int init();
 
-    virtual int32_t WAIT_FOR_DATA_RECEIVED() override;
     virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) override;
     virtual bool update(uint32_t tickCountDelta) override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
@@ -57,7 +56,6 @@ private:
     uint32_t _receivedPacketCount {0};
     int32_t _droppedPacketCount {0};
     int32_t _droppedPacketCountPrevious {0};
-    enum { THROTTLE = 0, ROLL = 1, PITCH = 2, YAW = 3, STICK_COUNT = 4 };
     std::array<stick_t, STICK_COUNT> _sticks {};
     enum { PACKET_SIZE = 25 };
     uint8_t _packet[PACKET_SIZE] {};

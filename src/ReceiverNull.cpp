@@ -1,11 +1,6 @@
 #include "ReceiverNull.h"
 
 
-int32_t ReceiverNull::WAIT_FOR_DATA_RECEIVED()
-{
-    return 0;
-}
-
 int32_t ReceiverNull::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
 {
     (void)ticksToWait;
@@ -37,22 +32,6 @@ void ReceiverNull::getStickValues(float&  throttleStick, float&  rollStick, floa
     rollStick = Q12dot4_to_float(_controls.rollStickQ12dot4);
     pitchStick = Q12dot4_to_float(_controls.pitchStickQ12dot4);
     yawStick = Q12dot4_to_float(_controls.yawStickQ12dot4);
-}
-
-ReceiverBase::EUI_48_t ReceiverNull::getMyEUI() const
-{
-    EUI_48_t ret {};
-    return ret;
-}
-
-ReceiverBase::EUI_48_t ReceiverNull::getPrimaryPeerEUI() const
-{
-    EUI_48_t ret {};
-    return ret;
-}
-
-void ReceiverNull::broadcastMyEUI() const
-{
 }
 
 uint32_t ReceiverNull::getAuxiliaryChannel(size_t index) const

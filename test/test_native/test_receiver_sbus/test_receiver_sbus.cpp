@@ -13,7 +13,7 @@ void tearDown()
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 void test_receiver_sbus()
 {
-    static ReceiverSBUS receiver;
+    static ReceiverSBUS receiver{{}, 0, 0};
 
     receiver.setPacketEmpty();
     TEST_ASSERT_TRUE(receiver.isPacketEmpty());

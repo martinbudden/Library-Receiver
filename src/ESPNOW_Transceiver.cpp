@@ -53,7 +53,8 @@ IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, con
 }
 #endif
 
-IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress)
+IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress, uint8_t channel) :
+    _channel(channel)
 {
     transceiver = this;
     memcpy(&_myMacAddress[0], myMacAddress, ESP_NOW_ETH_ALEN);
@@ -71,19 +72,19 @@ IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress)
 }
 
 #if defined(USE_ESPNOW)
-esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
+esp_err_t ESPNOW_Transceiver::init()
 {
     esp_err_t err = esp_now_init();
     if (err != ESP_OK) {
         Serial.printf("!!!! esp_now_init failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
     }
-    err = esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
+    err = esp_wifi_set_channel(_channel, WIFI_SECOND_CHAN_NONE);
     if (err != ESP_OK) {
         Serial.printf("!!!! esp_wifi_set_channel failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
     }
-    err = addBroadcastPeer(channel);
+    err = addBroadcastPeer(_channel);
     if (err != ESP_OK) {
         return err;
     }
@@ -100,17 +101,17 @@ esp_err_t ESPNOW_Transceiver::init(uint8_t channel)
     return ESP_OK;
 }
 
-IRAM_ATTR esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, uint8_t channel, const uint8_t* primaryMacAddress)
+IRAM_ATTR esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, const uint8_t* primaryMacAddress)
 {
     //Serial.printf("ESPNOW_Transceiver::init received data: %x, %d\r\n", received_data.bufferPtr, received_data.bufferSize);
-    const esp_err_t err = init(channel);
+    const esp_err_t err = init();
     if (err != ESP_OK) {
         return err;
     }
 
     received_data.len = 0;
     _peerData[PRIMARY_PEER].receivedDataPtr = &received_data;
-    _peerData[PRIMARY_PEER].peer_info.channel = channel;
+    _peerData[PRIMARY_PEER].peer_info.channel = _channel;
     _peerData[PRIMARY_PEER].peer_info.encrypt = false;
     _peerCount = 2; // since we have already added the broadcast peer
 

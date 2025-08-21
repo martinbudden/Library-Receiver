@@ -1,151 +1,136 @@
 #include "ReceiverSBUS.h"
 
-#pragma pack(push, 1)
-struct sbus_channels_t { // NOLINT(altera-struct-pack-align)
-    // 176 bits of data (11 bits per channel * 16 channels) = 22 bytes.
-    unsigned int channel0 : 11;
-    unsigned int channel1 : 11;
-    unsigned int channel2 : 11;
-    unsigned int channel3 : 11;
-    unsigned int channel4 : 11;
-    unsigned int channel5 : 11;
-    unsigned int channel6 : 11;
-    unsigned int channel7 : 11;
-    unsigned int channel8 : 11;
-    unsigned int channel9 : 11;
-    unsigned int channel10 : 11;
-    unsigned int channel11 : 11;
-    unsigned int channel12 : 11;
-    unsigned int channel13 : 11;
-    unsigned int channel14 : 11;
-    unsigned int channel15 : 11;
-    uint8_t flags;
-};
-#pragma pack(pop)
 
-
-ReceiverSBUS::ReceiverSBUS()
+ReceiverSBUS::ReceiverSBUS(const pins_t& pins, uint32_t uartIndex, uint32_t baudrate) :
+    ReceiverSerial(pins, uartIndex, baudrate, SBUS_DATA_BITS, SBUS_STOP_BITS, SBUS_PARITY)
 {
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
 
-int32_t ReceiverSBUS::WAIT_FOR_DATA_RECEIVED()
+bool ReceiverSBUS::onDataReceived(uint8_t data)
 {
-    return 0;
-}
+    const timeUs32_t timeNowUs = timeUs();
 
-int32_t ReceiverSBUS::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
-{
-    (void)ticksToWait;
-    return 0;
-}
-
-/*!
-If a packet was received from the atomJoyStickReceiver then unpack it and inform the receiver target that new stick values are available.
-
-Returns true if a packet has been received.
-*/
-bool ReceiverSBUS::update(uint32_t tickCountDelta)
-{
-    if (isPacketEmpty()) {
-        return false;
+    enum { TIME_ALLOWANCE = 500 };
+    if (timeNowUs > _startTime + SBUS_TIME_NEEDED_PER_FRAME + TIME_ALLOWANCE) {
+        _packetIndex = 0;
+        ++_droppedPacketCount;
     }
 
-    _packetReceived = true;
-
-    // record tickoutDelta for instrumentation
-    _tickCountDelta = tickCountDelta;
-
-    // track dropped packets
-    ++_packetCount;
-
-    if (unpackPacket(CHECK_PACKET)) {
-
-        // Save the stick values.
-        _controls.throttleStickQ12dot4 = 0;
-        _controls.rollStickQ12dot4 = 0;
-        _controls.pitchStickQ12dot4 = 0;
-        _controls.yawStickQ12dot4 = 0;
-
-        // now we have copied all the packet values, set the _newPacketAvailable flag
-        // NOTE: there is no mutex around this flag
-        _newPacketAvailable = true;
-        return true;
+    if (_packetIndex == 0) {
+        if (data != SBUS_START_BYTE) {
+            _packetIsEmpty = true;
+            return false;
+        }
+        _startTime = timeNowUs;
     }
+
+    _packet[_packetIndex++] = data;
+
+    if (_packetIndex == PACKET_SIZE) {
+        _packetIndex = 0;
+        if (_packet[PACKET_SIZE - 1] != SBUS_END_BYTE) {
+            ++_errorPacketCount;
+            _packetIsEmpty = true;
+            return false;
+        }
+    }
+    unpackPacket();
     return true;
 }
 
+/*!
+Maps channels in range [1000,2000] to floats in range [0,1] for throttle, [-1,1] for roll, pitch yaw
+*/
 void ReceiverSBUS::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
 {
-    throttleStick = static_cast<float>(_sticks[THROTTLE]);
-    rollStick = static_cast<float>(_sticks[ROLL]);
-    pitchStick = static_cast<float>(_sticks[PITCH]);
-    yawStick = static_cast<float>(_sticks[YAW]);
-}
-
-ReceiverBase::EUI_48_t ReceiverSBUS::getMyEUI() const
-{
-    EUI_48_t ret {};
-    return ret;
-}
-
-ReceiverBase::EUI_48_t ReceiverSBUS::getPrimaryPeerEUI() const
-{
-    EUI_48_t ret {};
-    return ret;
-}
-
-void ReceiverSBUS::broadcastMyEUI() const
-{
+    throttleStick = static_cast<float>(_channels[THROTTLE] - CHANNEL_RANGE) / CHANNEL_RANGE;
+    rollStick = static_cast<float>(_channels[ROLL] - CHANNEL_MIDDLE) / CHANNEL_RANGE;;
+    pitchStick = static_cast<float>(_channels[PITCH] - CHANNEL_MIDDLE) / CHANNEL_RANGE;;
+    yawStick = static_cast<float>(_channels[YAW] - CHANNEL_MIDDLE) / CHANNEL_RANGE;;
 }
 
 uint32_t ReceiverSBUS::getAuxiliaryChannel(size_t index) const
 {
-    return (index >= _auxiliaryChannelCount) ? CHANNEL_LOW : CHANNEL_HIGH;
+    if (index >= _auxiliaryChannelCount || index < STICK_COUNT) {
+        return CHANNEL_LOW;
+    }
+    return _channels[index - STICK_COUNT];
+}
+
+ReceiverBase::controls_pwm_t ReceiverSBUS::getControlsPWM() const
+{
+    return controls_pwm_t {
+        _channels[THROTTLE],
+        _channels[ROLL],
+        _channels[PITCH],
+        _channels[YAW]
+    };
 }
 
 /*!
 Check the packet if `checkPacket` set. If the packet is valid then unpack it into the member data and set the packet to empty.
 
 Returns true if a valid packet received, false otherwise.
-*/
-bool ReceiverSBUS::unpackPacket(checkPacket_t checkPacket)
-{
-    (void)checkPacket;
 
-    if (isPacketEmpty()) {
+SBUS packet is
+    1 start byte (has value be 0x0F)
+    22 bytes of channel data which is 176 bits: 16 channels of 11 bits per channel
+    1 flag byte, which gives flags pluse 2 1-bit channels
+    1 stop byte (has value 0x00)
+
+SBUS uses range [192,1792] which is mapped to [1000,2000] ([CHANNEL_LOW,CHANNEL_HIGH])
+
+Some transmitters/receivers use range [172,1811] which is  clipped.
+*/
+bool ReceiverSBUS::unpackPacket()
+{
+    if (_packet[PACKET_SIZE - 1] != SBUS_END_BYTE) {
+        _packetIsEmpty = true;
         return false;
     }
+    // SBUS uses AETR (Ailerons, Elevator, Throttle, Rudder), ie ROLL, PITCH, THROTTLE, YAW 
+    // This is the default, so no reordering required
+    _channels[0]  = _packet[1]     | _packet[2]<<8;
+    _channels[1]  = _packet[2]>>3  | _packet[3]<<5;
+    _channels[2]  = _packet[3]>>6  | _packet[4]<<2  | _packet[5]<<10;
+    _channels[3]  = _packet[5]>>1  | _packet[6]<<7;
+    _channels[4]  = _packet[6]>>4  | _packet[7]<<4;
+    _channels[5]  = _packet[7]>>7  | _packet[8]<<1  | _packet[9]<<9;
+    _channels[6]  = _packet[9]>>2  | _packet[10]<<6;
+    _channels[7]  = _packet[10]>>5 | _packet[11]<<3;
+    _channels[8]  = _packet[12]    | _packet[13]<<8;
+    _channels[9]  = _packet[13]>>3 | _packet[14]<<5;
+    _channels[10] = _packet[14]>>6 | _packet[15]<<2 | _packet[16]<<10;
+    _channels[11] = _packet[16]>>1 | _packet[17]<<7;
+    _channels[12] = _packet[17]>>4 | _packet[18]<<4;
+    _channels[13] = _packet[18]>>7 | _packet[19]<<1 | _packet[20]<<9;
+    _channels[14] = _packet[20]>>2 | _packet[21]<<6;
+    _channels[15] = _packet[21]>>5 | _packet[22]<<3;
 
-    const sbus_channels_t& channels = *reinterpret_cast<sbus_channels_t*>(&_packet[0]);
-    _channels[0] = channels.channel0;
-    _channels[1] = channels.channel1;
-    _channels[2] = channels.channel2;
-    _channels[3] = channels.channel3;
-    _channels[4] = channels.channel4;
-    _channels[5] = channels.channel5;
-    _channels[6] = channels.channel6;
-    _channels[7] = channels.channel7;
-    _channels[8] = channels.channel8;
-    _channels[9] = channels.channel9;
-    _channels[10] = channels.channel10;
-    _channels[11] = channels.channel11;
-    _channels[12] = channels.channel12;
-    _channels[13] = channels.channel13;
-    _channels[14] = channels.channel14;
-    _channels[15] = channels.channel15;
 
-    enum { FLAG_CHANNEL_16 = 0x01, FLAG_CHANNEL_17 = 0x02, FLAG_FAILSAFE_ACTIVE = 0x04, FLAG_SIGNAL_LOSS = 0x08 };
+    // map range [192,1792] to [1000,2000]
+#if true
+    for (size_t ii = 0; ii < CHANNEL_11_BIT_COUNT; ++ii) {
+        _channels[ii] &= 0x07FF;
+        _channels[ii] = static_cast<uint16_t>(5.0F * static_cast<float>(_channels[ii]) / 8.0F) + 880;
+    }
+#else
+    for (size_t ii = 0; ii < 16; ++ii) {
+        uint32_t channel =  _channels[ii];
+        channel <<= 16;
+        channel *=5;
+        channel >>= 19;
+        channel += 880;
+        _channels[ii] = static_cast<uint16_t>(channel);
+    }
+#endif
 
-    _channels[16] = (channels.flags & FLAG_CHANNEL_16) ? CHANNEL_HIGH : CHANNEL_LOW;
-    _channels[17] = (channels.flags & FLAG_CHANNEL_17) ? CHANNEL_HIGH : CHANNEL_LOW;
+    enum { FLAG_CHANNEL_16 = 0x01, FLAG_CHANNEL_17 = 0x02, FLAG_LOST_FRAME = 0x04, FLAG_LOST_SIGNAL = 0x08 };
+    const uint8_t flags = _packet[23]; // NOLINT(cppcoreguidelines-init-variables) false positive
+    _channels[16] = (flags & FLAG_CHANNEL_16) ? CHANNEL_HIGH : CHANNEL_LOW;
+    _channels[17] = (flags & FLAG_CHANNEL_17) ? CHANNEL_HIGH : CHANNEL_LOW;
 
-    _sticks[ROLL] = _channels[0];
-    _sticks[PITCH] = _channels[1];
-    _sticks[YAW] = _channels[2];
-    _sticks[THROTTLE] = _channels[3];
-
-    setPacketEmpty();
+    _packetIsEmpty = false;
     return true;
 }
-

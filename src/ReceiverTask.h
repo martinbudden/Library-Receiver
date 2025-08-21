@@ -1,6 +1,6 @@
 #pragma once
 
-#include <TaskBase.h>
+#include <TaskBase.h> // NOLINT(clang-diagnostic-pragma-pack)
 
 class RadioControllerBase;
 class ReceiverBase;

@@ -4,8 +4,8 @@
 #include <HardwareSerial.h>
 #endif
 
-ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress) :
-    _transceiver(macAddress),
+ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress, uint8_t channel) :
+    _transceiver(macAddress, channel),
     _received_data(&_packet[0], sizeof(_packet))
 {
     // switches are mapped to the auxiliary channels
@@ -13,22 +13,16 @@ ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress) :
 }
 
 /*!
-Setup the receiver. Initialize the transceiver.
+Initialize the transceiver.
 */
-esp_err_t ReceiverAtomJoyStick::setup(uint8_t channel) // NOLINT(readability-convert-member-functions-to-static)
+int ReceiverAtomJoyStick::init() // NOLINT(readability-convert-member-functions-to-static)
 {
 #if defined(USE_ESPNOW)
-    const esp_err_t err = _transceiver.init(_received_data, channel, nullptr);
+    const esp_err_t err = _transceiver.init(_received_data, nullptr);
     return err;
 #else
-    (void)channel;
     return 0;
 #endif
-}
-
-int32_t ReceiverAtomJoyStick::WAIT_FOR_DATA_RECEIVED()
-{
-    return _transceiver.WAIT_FOR_PRIMARY_DATA_RECEIVED();
 }
 
 int32_t ReceiverAtomJoyStick::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
@@ -89,10 +83,9 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
 }
 
 /*!
-Maps the joystick values from Q12dot4 format in the range [-2048, 2047] to floats in the range [-1, 1].
+Maps the joystick values as floats in the range [-1, 1].
 
-NOTE: this function runs in the context of the MotorPairController task, in particular the FPU usage is in that context, so this avoids the
-need to save the ESP32 FPU registers on a context switch.
+Called by the receiver task.
 */
 void ReceiverAtomJoyStick::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
 {

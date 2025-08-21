@@ -44,9 +44,9 @@ public:
         received_data_t* receivedDataPtr {nullptr};
     };
 public:
-    IRAM_ATTR explicit ESPNOW_Transceiver(const uint8_t* myMacAddress);
+    IRAM_ATTR explicit ESPNOW_Transceiver(const uint8_t* myMacAddress, uint8_t channel);
     // !!NOTE: all references passed to init() and addSecondaryPeer() must be static or allocated, ie they must not be local variables on the stack
-    IRAM_ATTR esp_err_t init(received_data_t& received_data, uint8_t channel, const uint8_t* transmitMacAddress);
+    IRAM_ATTR esp_err_t init(received_data_t& received_data, const uint8_t* transmitMacAddress);
     IRAM_ATTR esp_err_t addSecondaryPeer(received_data_t& received_data, const uint8_t* macAddress);
     IRAM_ATTR inline const uint8_t* myMacAddress() const { return &_myMacAddress[0]; }
     // sends data to the primary peer,
@@ -67,7 +67,7 @@ public:
     IRAM_ATTR inline uint32_t getTickCountDelta() const { return _tickCountDelta; }
     IRAM_ATTR inline uint32_t getTickCountDeltaAndReset() { const uint32_t tickCountDelta = _tickCountDelta; _tickCountDelta = 0; return tickCountDelta; }
 private:
-    IRAM_ATTR esp_err_t init(uint8_t channel);
+    IRAM_ATTR esp_err_t init();
     IRAM_ATTR esp_err_t addBroadcastPeer(uint8_t channel);
     // when data is received the copy function is called to copy the received data into the client's buffer
     IRAM_ATTR bool copyReceivedDataToBuffer(const uint8_t* macAddress, const uint8_t* data, size_t len);
@@ -88,6 +88,7 @@ private:
     // by default the transceiver has two peers, the broadcast peer and the primary peer
     int _isPrimaryPeerMacAddressSet {false}; // this is int rather than bool because using bool caused strange bugs
     int _peerCount {0};
+    uint8_t _channel;
     std::array<peer_data_t, MAX_PEER_COUNT> _peerData;
     esp_now_send_status_t _sendStatus {ESP_NOW_SEND_SUCCESS};
     std::array<uint8_t, ESP_NOW_ETH_ALEN + 2> _myMacAddress {0, 0, 0, 0, 0, 0, 0, 0};
