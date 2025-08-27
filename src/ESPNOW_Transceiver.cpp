@@ -2,7 +2,7 @@
 #include "ESPNOW_Transceiver.h"
 #include <cstring>
 
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <HardwareSerial.h>
 #include <cstring>
 #include <esp_wifi.h>
@@ -22,7 +22,7 @@ Pointer to the transceiver used by the callback functions.
 */
 ESPNOW_Transceiver* ESPNOW_Transceiver::transceiver;
 
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 /*!
 Callback when data is sent.
 */
@@ -58,7 +58,7 @@ IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress, ui
 {
     transceiver = this;
     memcpy(&_myMacAddress[0], myMacAddress, ESP_NOW_ETH_ALEN);
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
     _primaryDataReceivedQueue = xQueueCreateStatic(DATA_READY_QUEUE_LENGTH, sizeof(_primaryDataReceivedQueueItem), &_primaryDataReceivedQueueStorageArea[0], &_primaryDataReceivedQueueStatic);
     configASSERT(_primaryDataReceivedQueue);
     const UBaseType_t primaryMessageCount = uxQueueMessagesWaiting(_primaryDataReceivedQueue);
@@ -71,7 +71,7 @@ IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress, ui
 #endif
 }
 
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 esp_err_t ESPNOW_Transceiver::init()
 {
     esp_err_t err = esp_now_init();

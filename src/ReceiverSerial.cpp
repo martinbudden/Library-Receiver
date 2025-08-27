@@ -31,13 +31,13 @@ void ReceiverSerial::dataReadyISR()
 #endif
 }
 
-ReceiverSerial::ReceiverSerial(const pins_t& pins, uint32_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) :
+ReceiverSerial::ReceiverSerial(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) :
     _pins(pins),
     _uartIndex(uartIndex),
-    _baudrate(baudrate),
     _dataBits(dataBits),
     _stopBits(stopBits),
-    _parity(parity)
+    _parity(parity),
+    _baudrate(baudrate)
 {
     receiver = this;
 }

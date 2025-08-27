@@ -3,7 +3,7 @@
 
 #include <TimeMicroSeconds.h>
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #endif
@@ -23,7 +23,7 @@ loop() function for when not using FREERTOS
 void ReceiverTask::loop()
 {
     // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than taskIntervalTicks
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
     const TickType_t tickCount = xTaskGetTickCount();
 #else
     const uint32_t tickCount = timeUs() / 1000;
@@ -54,34 +54,35 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
 */
 [[noreturn]] void ReceiverTask::task() // NOLINT(readability-convert-member-functions-to-static)
 {
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 
-#if defined(USE_RECEIVER_TASK_TIME_BASED_SCHEDULING)
-    // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
-    const uint32_t taskIntervalTicks = pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
-    assert(taskIntervalTicks > 0 && "ReceiverTask taskIntervalTicks is zero.");
-    _previousWakeTimeTicks = xTaskGetTickCount();
+    if (_taskIntervalMicroSeconds == 0) {
+        // event driven scheduling
+        while (true) {
+            const uint32_t ticksToWait = _radioController.getTimeoutTicks();
+            if (_receiver.WAIT_FOR_DATA_RECEIVED(ticksToWait) == pdPASS) {
+                loop();
+            } else {
+                // WAIT timed out, so check failsafe
+                _radioController.checkFailsafe(xTaskGetTickCount());
+            }
+        }
+    } else {
+        // time based scheduling
+        // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
+        const uint32_t taskIntervalTicks = _taskIntervalMicroSeconds < 1000 ? 1 : pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
+        _previousWakeTimeTicks = xTaskGetTickCount();
 
-    while (true) {
-        // delay until the end of the next taskIntervalTicks
-        vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
+        while (true) {
+            // delay until the end of the next taskIntervalTicks
+            vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
 
-        loop();
-    }
-#else
-    while (true) {
-        const uint32_t ticksToWait = _radioController.getTimeoutTicks();
-        if (_receiver.WAIT_FOR_DATA_RECEIVED(ticksToWait) == pdPASS) {
             loop();
-        } else {
-            // WAIT timed out, so check failsafe
-            _radioController.checkFailsafe(xTaskGetTickCount());
         }
     }
-#endif // USE_RECEIVER_TASK_TIME_BASED_SCHEDULING
 #else
     while (true) {}
-#endif // USE_FREERTOS
+#endif // FRAMEWORK_USE_FREERTOS
 }
 
 /*!

@@ -1,6 +1,6 @@
 #include "ReceiverAtomJoyStick.h"
 #include <cstring>
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <HardwareSerial.h>
 #endif
 
@@ -17,7 +17,7 @@ Initialize the transceiver.
 */
 int ReceiverAtomJoyStick::init() // NOLINT(readability-convert-member-functions-to-static)
 {
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
     const esp_err_t err = _transceiver.init(_received_data, nullptr);
     return err;
 #else
@@ -75,7 +75,7 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
         _newPacketAvailable = true;
         return true;
     }
-#if defined(USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
     Serial.printf("BadPacket\r\n");
 #endif
     // we've had a packet even though it is a bad one, so we haven't lost contact with the receiver
@@ -135,12 +135,12 @@ esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCou
         const esp_err_t err = _transceiver.broadcastData(&data[0], sizeof(data)); // NOLINT(cppcoreguidelines-init-variables) false positive
         //  cppcheck-suppress knownConditionTrueFalse
         if (err != ESP_OK) {
-#if defined(USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
             Serial.printf("broadcastMyMacAddressForBinding failed: %X\r\n", err);
 #endif
             return err;
         }
-#if defined(USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
         delay(broadcastDelayMs); // delay() function has units of milliseconds
 #else
         (void)broadcastDelayMs;

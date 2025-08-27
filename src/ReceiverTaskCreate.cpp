@@ -2,7 +2,7 @@
 #include "ReceiverTask.h"
 
 #if defined(USE_DEBUG_PRINTF_TASK_INFORMATION)
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <HardwareSerial.h>
 #endif
 #endif
@@ -11,7 +11,7 @@
 #include <array>
 #include <cstring>
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 #include <freertos/FreeRTOS.h>
 #include <freertos/FreeRTOSConfig.h>
 #include <freertos/task.h>
@@ -19,17 +19,11 @@
 
 ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID)
 {
-#if defined(USE_RECEIVER_TASK_TIME_BASED_SCHEDULING)
-    assert(false && "Task interval not specified for ReceiverTask");
-#endif
     return createTask(receiver, radioController, receiverWatcher, priority, coreID, 0);
 }
 
 ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID) // NOLINT(readability-convert-member-functions-to-static)
 {
-#if defined(USE_RECEIVER_TASK_TIME_BASED_SCHEDULING)
-    assert(false && "Task interval not specified for ReceiverTask");
-#endif
     return createTask(taskInfo, receiver, radioController, receiverWatcher, priority, coreID, 0);
 }
 
@@ -43,13 +37,13 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
 {
     static ReceiverTask receiverTask(taskIntervalMicroSeconds, receiver, radioController, receiverWatcher);
 
-#if defined(USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS)
 #if defined(USE_DEBUG_PRINTF_TASK_INFORMATION)
-#if defined(USE_RECEIVER_TASK_TIME_BASED_SCHEDULING)
-    Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
-#else
-    Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
-#endif
+    if (taskIntervalMicroSeconds == 0) {
+        Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
+    } else {
+        Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
+    }
 #endif //USE_DEBUG_PRINTF_TASK_INFORMATION
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
@@ -86,6 +80,6 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
     (void)taskInfo;
     (void)priority;
     (void)coreID;
-#endif // USE_FREERTOS
+#endif // FRAMEWORK_USE_FREERTOS
     return &receiverTask;
 }

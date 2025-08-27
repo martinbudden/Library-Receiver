@@ -17,7 +17,7 @@
         }
     ],
     "license": "MIT",
-    "version": "0.4.5",
+    "version": "0.5.0",
     "frameworks": "*",
     "platforms": "*",
     "headers": ["ESPNOW_Transceiver.h", "RadioControllerBase.h", "ReceiverAtomJoyStick.h", "ReceiverBase.h", "ReceiverNull.h", "ReceiverSBUS.h", "ReceiverSerial.h", "ReceiverTask.h", "ReceiverTelemetry.h", "ReceiverTelemetryData.h"]

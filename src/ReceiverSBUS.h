@@ -15,7 +15,7 @@ public:
     enum { SBUS_DATA_BITS = 8, SBUS_STOP_BITS = 2, SBUS_PARITY = PARITY_EVEN }; // 8E2
     enum { SBUS_TIME_NEEDED_PER_FRAME = 3000 };
 public:
-    ReceiverSBUS(const pins_t& pins, uint32_t uartIndex, uint32_t baudrate);
+    ReceiverSBUS(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
     void init();
 private:
     // Receiver is not copyable or moveable
@@ -50,7 +50,7 @@ private:
 public:
     inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return mutex_enter_timeout_ms(&_dataReadyMutex, ticksToWait); } // returns true if mutex owned, false if timeout
     inline void SIGNAL_DATA_READY_FROM_ISR() const { mutex_exit(&_dataReadyMutex); }
-#elif defined(USE_FREERTOS)
+#elif defined(FRAMEWORK_USE_FREERTOS)
     mutable uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
     enum { IMU_DATA_READY_QUEUE_LENGTH = 1 };
     std::array<uint8_t, IMU_DATA_READY_QUEUE_LENGTH * sizeof(_dataReadyQueueItem)> _dataReadyQueueStorageArea {};

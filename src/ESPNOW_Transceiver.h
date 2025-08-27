@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 
 #include <esp_now.h>
 #include <freertos/FreeRTOS.h>
@@ -57,7 +57,7 @@ public:
     IRAM_ATTR const uint8_t* getPrimaryPeerMacAddress() const { return _peerData[PRIMARY_PEER].peer_info.peer_addr; }
     IRAM_ATTR inline uint8_t getBroadcastChannel() const { return _peerData[BROADCAST_PEER].peer_info.channel; }
     IRAM_ATTR esp_err_t broadcastData(const uint8_t* data, size_t len) const {
-#if defined(USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
          return esp_now_send(_peerData[BROADCAST_PEER].peer_info.peer_addr, data, len); 
 #else
         (void)data; (void)len; return -1;
@@ -93,7 +93,7 @@ private:
     esp_now_send_status_t _sendStatus {ESP_NOW_SEND_SUCCESS};
     std::array<uint8_t, ESP_NOW_ETH_ALEN + 2> _myMacAddress {0, 0, 0, 0, 0, 0, 0, 0};
 
-#if defined(USE_ESPNOW) && defined(USE_FREERTOS)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW) && defined(FRAMEWORK_USE_FREERTOS)
     enum { DATA_READY_QUEUE_LENGTH = 1};
     mutable uint32_t _primaryDataReceivedQueueItem {}; // this is just a dummy item whose value is not used
     mutable BaseType_t _primaryDataReceivedQueueHigherPriorityTaskWoken = pdFALSE;
