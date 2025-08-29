@@ -16,12 +16,20 @@
 class ReceiverSerial : public ReceiverBase {
 public:
     enum { PARITY_NONE, PARITY_EVEN, PARITY_ODD };
+    struct port_pin_t {
+        uint8_t port;
+        uint8_t pin;
+    };
     struct pins_t {
         uint8_t rx;
         uint8_t tx;
     };
+    struct port_pins_t {
+        port_pin_t rx;
+        port_pin_t tx;
+    };
 public:
-    ReceiverSerial(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
+    ReceiverSerial(const port_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
     void init();
 private:
     // Receiver is not copyable or moveable
@@ -49,7 +57,7 @@ protected:
     int32_t _droppedPacketCountPrevious {0};
 private:
     static ReceiverSerial* receiver; //!< alias of `this` to be used in interrupt service routine
-    pins_t _pins {};
+    port_pins_t _pins {};
     const uint8_t _uartIndex;
     const uint8_t _dataBits;
     const uint8_t _stopBits;

@@ -5,6 +5,12 @@
 #include <hardware/uart.h>
 #elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_TEST)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
+#include <stm32f4xx_hal.h>
+#include <stm32f4xx_hal_gpio.h>
+#include <stm32f4xx_hal_uart.h>
+static inline GPIO_TypeDef* gpioPort(uint8_t port) { return reinterpret_cast<GPIO_TypeDef*>(GPIOA_BASE + port*(GPIOB_BASE - GPIOA_BASE)); }
+static inline uint16_t gpioPin(uint8_t pin) { return static_cast<uint16_t>(1U << pin); }
 #else // defaults to FRAMEWORK_ARDUINO
 #endif // FRAMEWORK
 
@@ -31,7 +37,7 @@ void ReceiverSerial::dataReadyISR()
 #endif
 }
 
-ReceiverSerial::ReceiverSerial(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) :
+ReceiverSerial::ReceiverSerial(const port_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) :
     _pins(pins),
     _uartIndex(uartIndex),
     _dataBits(dataBits),
@@ -50,8 +56,8 @@ void ReceiverSerial::init()
     _uart = uart_get_instance(_uartIndex);
 
     uart_init(uart1, _baudrate);
-    gpio_set_function(_pins.rx, GPIO_FUNC_UART);
-    gpio_set_function(_pins.tx, GPIO_FUNC_UART);
+    gpio_set_function(_pins.rx.pin, GPIO_FUNC_UART);
+    gpio_set_function(_pins.tx.pin, GPIO_FUNC_UART);
 
     enum { NO_CTS = false, NO_RTS = false };
     uart_set_hw_flow(_uart, NO_CTS, NO_RTS);
@@ -70,6 +76,13 @@ void ReceiverSerial::init()
     enum { RX_NEEDS_DATA = true, RX_DOES_NOT_NEED_DATA = false };
     enum { TX_NEEDS_DATA = true, TX_DOES_NOT_NEED_DATA = false };
     uart_set_irq_enables(_uart, RX_NEEDS_DATA, TX_DOES_NOT_NEED_DATA);
+
+#elif defined(FRAMEWORK_ESPIDF)
+
+#elif defined(FRAMEWORK_TEST)
+
+#else // defaults to FRAMEWORK_ARDUINO
+
 #endif
 }
 

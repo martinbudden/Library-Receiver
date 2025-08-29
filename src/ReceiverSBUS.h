@@ -16,6 +16,7 @@ public:
     enum { SBUS_TIME_NEEDED_PER_FRAME = 3000 };
 public:
     ReceiverSBUS(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    ReceiverSBUS(const port_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
     void init();
 private:
     // Receiver is not copyable or moveable

@@ -9,6 +9,8 @@
         "earlephilhower",
         "ESPIDF",
         "ESPNOW",
+        "GPIOA",
+        "GPIOB",
         "hicpp",
         "ipch",
         "IRAM",
