@@ -21,21 +21,21 @@ void test_receiver_atom_joystick_auxiliary_channels()
 
     uint8_t switchIndex = 0;
     TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
-    TEST_ASSERT_EQUAL(0, receiver.getAuxiliaryChannel(switchIndex));
+    TEST_ASSERT_EQUAL(ReceiverBase::CHANNEL_LOW, receiver.getAuxiliaryChannel(switchIndex));
     receiver.setSwitch(switchIndex, 1);
-    TEST_ASSERT_GREATER_THAN(500, receiver.getAuxiliaryChannel(switchIndex));
+    TEST_ASSERT_GREATER_THAN(ReceiverBase::CHANNEL_MIDDLE, receiver.getAuxiliaryChannel(switchIndex));
 
     switchIndex = 1;
     TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
-    TEST_ASSERT_EQUAL(0, receiver.getAuxiliaryChannel(switchIndex));
+    TEST_ASSERT_EQUAL(ReceiverBase::CHANNEL_LOW, receiver.getAuxiliaryChannel(switchIndex));
     receiver.setSwitch(switchIndex, 1);
-    TEST_ASSERT_GREATER_THAN(500, receiver.getAuxiliaryChannel(switchIndex));
+    TEST_ASSERT_GREATER_THAN(ReceiverBase::CHANNEL_MIDDLE, receiver.getAuxiliaryChannel(switchIndex));
 
     switchIndex = 2;
     TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
-    TEST_ASSERT_EQUAL(0, receiver.getAuxiliaryChannel(switchIndex));
+    TEST_ASSERT_EQUAL(ReceiverBase::CHANNEL_LOW, receiver.getAuxiliaryChannel(switchIndex));
     receiver.setSwitch(switchIndex, 1);
-    TEST_ASSERT_GREATER_THAN(500, receiver.getAuxiliaryChannel(switchIndex));
+    TEST_ASSERT_GREATER_THAN(ReceiverBase::CHANNEL_MIDDLE, receiver.getAuxiliaryChannel(switchIndex));
 }
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 

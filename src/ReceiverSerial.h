@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ReceiverBase.h"
+#include <TimeMicroSeconds.h>
 #include <array>
 
 #if defined(FRAMEWORK_USE_FREERTOS)
@@ -40,21 +41,17 @@ private:
 public:
     virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) override;
     virtual bool update(uint32_t tickCountDelta) override;
-#if defined(FRAMEWORK_ESPIDF)
-    IRAM_ATTR static void dataReadyISR();
-#else
-    static void dataReadyISR();
-#endif
+    FAST_CODE static void dataReadyISR();
     virtual bool onDataReceived(uint8_t data) = 0;
     bool isPacketEmpty() const { return _packetIsEmpty; }
     void setPacketEmpty() { _packetIsEmpty = true; }
+    size_t getPacketIndex() const { return _packetIndex; } // for testing
 protected:
     uint32_t _packetIsEmpty {true};
-    uint32_t _packetCount {0};
     uint32_t _receivedPacketCount {0};
     int32_t _errorPacketCount {0};
-    int32_t _droppedPacketCount {0};
-    int32_t _droppedPacketCountPrevious {0};
+    size_t _packetIndex {};
+    timeUs32_t _startTime {};
 private:
     static ReceiverSerial* receiver; //!< alias of `this` to be used in interrupt service routine
     port_pins_t _pins {};
@@ -63,6 +60,10 @@ private:
     const uint8_t _stopBits;
     const uint8_t _parity;
     const uint32_t _baudrate;
+#if defined(FRAMEWORK_RPI_PICO)
+    uart_inst_t* _uart {};
+#endif
+
 #if defined(FRAMEWORK_USE_FREERTOS)
 
     mutable uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
@@ -77,7 +78,6 @@ public:
 
 #if defined(FRAMEWORK_RPI_PICO)
     mutable mutex_t _dataReadyMutex{};
-    uart_inst_t* _uart {};
 public:
     inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return mutex_enter_timeout_ms(&_dataReadyMutex, ticksToWait); } // returns true if mutex owned, false if timeout
     inline void SIGNAL_DATA_READY_FROM_ISR() const { mutex_exit(&_dataReadyMutex); }

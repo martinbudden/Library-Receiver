@@ -55,17 +55,17 @@ void test_receiver_controls()
     ReceiverNull receiver;
 
     ReceiverBase::controls_t controls = receiver.getControls();
-    TEST_ASSERT_EQUAL(0, controls.throttleStickQ12dot4);
-    TEST_ASSERT_EQUAL(0, controls.rollStickQ12dot4);
-    TEST_ASSERT_EQUAL(0, controls.pitchStickQ12dot4);
-    TEST_ASSERT_EQUAL(0, controls.yawStickQ12dot4);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, controls.throttle);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, controls.roll);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, controls.pitch);
+    TEST_ASSERT_EQUAL_FLOAT(0.0F, controls.yaw);
 
-    controls = { 2, 3, 4, 5 };
+    controls = { 2.0F, 3.0F, 4.0F, 5.0F };
     receiver.setControls(controls);
-    TEST_ASSERT_EQUAL(2, controls.throttleStickQ12dot4);
-    TEST_ASSERT_EQUAL(3, controls.rollStickQ12dot4);
-    TEST_ASSERT_EQUAL(4, controls.pitchStickQ12dot4);
-    TEST_ASSERT_EQUAL(5, controls.yawStickQ12dot4);
+    TEST_ASSERT_EQUAL_FLOAT(2.0F, controls.throttle);
+    TEST_ASSERT_EQUAL_FLOAT(3.0F, controls.roll);
+    TEST_ASSERT_EQUAL_FLOAT(4.0F, controls.pitch);
+    TEST_ASSERT_EQUAL_FLOAT(5.0F, controls.yaw);
 }
 
 void test_receiver_auxiliary_channels()

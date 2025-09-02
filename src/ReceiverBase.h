@@ -3,6 +3,12 @@
 #include <cstddef>
 #include <cstdint>
 
+#if defined(FRAMEWORK_ESPIDF)
+#define FAST_CODE IRAM_ATTR
+#else
+#define FAST_CODE
+#endif
+
 /*!
 Abstract Base Class defining a receiver.
 */
@@ -36,46 +42,47 @@ public:
 public:
      //! 48-bit extended unique identifier (often synonymous with MAC address)
     struct EUI_48_t {
-        uint8_t octet[6];
+        uint8_t octets[6];
     };
-     //! unscaled control values from receiver as Q12.4 fixed point integer, ie in range [-2048, 2047]
+     //! control values from receiver scaled to the range [-1.0F, 1.0F]
     struct controls_t {
-        int32_t throttleStickQ12dot4;
-        int32_t rollStickQ12dot4;
-        int32_t pitchStickQ12dot4;
-        int32_t yawStickQ12dot4;
+        float throttle;
+        float roll;
+        float pitch;
+        float yaw;
     };
     //! controls mapped to the Pulse Width Modulation (PWM) range [1000, 2000]
     struct controls_pwm_t {
-        uint16_t throttleStick;
-        uint16_t rollStick;
-        uint16_t pitchStick;
-        uint16_t yawStick;
+        uint16_t throttle;
+        uint16_t roll;
+        uint16_t pitch;
+        uint16_t yaw;
     };
 public:
     virtual ~ReceiverBase() = default;
-    // BaseType_t is int, TickType_t is uint32_t
-    virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) = 0;
-    virtual bool update(uint32_t tickCountDelta) = 0;
-    bool update() { return update(0); }
-    virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const = 0;
     // 48-bit Extended Unique Identifiers, usually the MAC address if the receiver has one, but may be an alternative provided by the receiver.
     virtual EUI_48_t getMyEUI() const { const EUI_48_t ret {}; return ret; }
     virtual EUI_48_t getPrimaryPeerEUI() const  { const EUI_48_t ret {}; return ret; }
     virtual void broadcastMyEUI() const {}
 
+    virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) = 0;
+    virtual bool update(uint32_t tickCountDelta) = 0;
+    virtual bool unpackPacket() = 0;
+    virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const = 0;
+
     inline controls_t getControls() const { return _controls; }
-    virtual controls_pwm_t getControlsPWM() const {
+    controls_pwm_t getControlsPWM() const {
         return controls_pwm_t {
-            .throttleStick = static_cast<uint16_t>((_controls.throttleStickQ12dot4 >> 2) + CHANNEL_MIDDLE),
-            .rollStick = static_cast<uint16_t>((_controls.rollStickQ12dot4 >> 2) + CHANNEL_MIDDLE),
-            .pitchStick = static_cast<uint16_t>((_controls.pitchStickQ12dot4 >> 2) + CHANNEL_MIDDLE),
-            .yawStick = static_cast<uint16_t>((_controls.yawStickQ12dot4 >> 2) + CHANNEL_MIDDLE)
+            .throttle = static_cast<uint16_t>((_controls.throttle * CHANNEL_RANGE) + CHANNEL_MIDDLE),
+            .roll = static_cast<uint16_t>((_controls.roll * CHANNEL_RANGE) + CHANNEL_MIDDLE),
+            .pitch = static_cast<uint16_t>((_controls.pitch * CHANNEL_RANGE) + CHANNEL_MIDDLE),
+            .yaw = static_cast<uint16_t>((_controls.yaw * CHANNEL_RANGE) + CHANNEL_MIDDLE)
         };
     }
 
+    virtual uint16_t getChannelRaw(size_t index) const = 0;
     uint32_t getAuxiliaryChannelCount() const { return _auxiliaryChannelCount; }
-    virtual uint32_t getAuxiliaryChannel(size_t index) const = 0;
+    uint16_t getAuxiliaryChannel(size_t index) const { return getChannelRaw(index + STICK_COUNT); }
 
     inline uint32_t getSwitch(size_t index) const { return (_switches & (0b11U << (2*index))) >> (2*index); }
     inline void setSwitch(size_t index, uint8_t value) { _switches &= ~(0b11U << (2*index)); _switches |= (value & 0b11U) << (2*index); }
@@ -91,7 +98,10 @@ public:
 protected:
     int32_t _packetReceived {false}; // may be invalid packet
     int32_t _newPacketAvailable {false};
+    uint32_t _packetCount {0};
     int32_t _droppedPacketCountDelta {0};
+    int32_t _droppedPacketCount {0};
+    int32_t _droppedPacketCountPrevious {0};
     uint32_t _tickCountDelta {0};
     uint32_t _switches {0}; // 16 2 or 3 positions switches, each using 2-bits
     controls_t _controls {}; //!< the main 4 channels

@@ -31,9 +31,9 @@ int32_t ReceiverAtomJoyStick::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
 }
 
 /*!
-If a packet was received from the atomJoyStickReceiver then unpack it and inform the receiver target that new stick values are available.
+If a packet was received from the atomJoyStickReceiver then unpack it and return true.
 
-Returns true if a packet has been received.
+Returns false if an empty or invalid packet was received.
 */
 bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
 {
@@ -42,13 +42,13 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
     }
 
     _packetReceived = true;
+    ++_packetCount;
 
     // record tickoutDelta for instrumentation
     _tickCountDelta = tickCountDelta;
 
     // track dropped packets
     _receivedPacketCount = _transceiver.getReceivedPacketCount();
-    ++_packetCount;
     _droppedPacketCount = static_cast<int32_t>(_receivedPacketCount - _packetCount);
     _droppedPacketCountDelta = _droppedPacketCount - _droppedPacketCountPrevious;
     _droppedPacketCountPrevious = _droppedPacketCount;
@@ -60,10 +60,10 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
         }
 
         // Save the stick values.
-        _controls.throttleStickQ12dot4 = normalizedStick(THROTTLE);
-        _controls.rollStickQ12dot4 = normalizedStick(ROLL);
-        _controls.pitchStickQ12dot4 = normalizedStick(PITCH);
-        _controls.yawStickQ12dot4 = normalizedStick(YAW);
+        _controls.throttle = normalizedStick(THROTTLE);
+        _controls.roll = normalizedStick(ROLL);
+        _controls.pitch = normalizedStick(PITCH);
+        _controls.yaw = normalizedStick(YAW);
 
         // Save the button values.
         setSwitch(MOTOR_ON_OFF_SWITCH, _flipButton);
@@ -87,12 +87,12 @@ Maps the joystick values as floats in the range [-1, 1].
 
 Called by the receiver task.
 */
-void ReceiverAtomJoyStick::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
+void ReceiverAtomJoyStick::getStickValues(float& throttle, float& roll, float& pitch, float& yaw) const
 {
-    throttleStick = Q12dot4_to_float(_controls.throttleStickQ12dot4);
-    rollStick = Q12dot4_to_float(_controls.rollStickQ12dot4);
-    pitchStick = Q12dot4_to_float(_controls.pitchStickQ12dot4);
-    yawStick = Q12dot4_to_float(_controls.yawStickQ12dot4);
+    throttle = _controls.throttle;
+    roll = _controls.roll;
+    pitch = _controls.pitch;
+    yaw = _controls.yaw;
 }
 
 ReceiverBase::EUI_48_t ReceiverAtomJoyStick::getMyEUI() const
@@ -114,9 +114,21 @@ void ReceiverAtomJoyStick::broadcastMyEUI() const
     broadcastMyMacAddressForBinding();
 }
 
-uint32_t ReceiverAtomJoyStick::getAuxiliaryChannel(size_t index) const
+#if false
+uint16_t ReceiverAtomJoyStick::getAuxiliaryChannel(size_t index) const
 {
-    return (index >= _auxiliaryChannelCount) ? CHANNEL_LOW : getSwitch(index) ? CHANNEL_HIGH : 0;
+    return (index >= _auxiliaryChannelCount) ? CHANNEL_LOW : getSwitch(index) ? CHANNEL_HIGH : CHANNEL_LOW;
+}
+#endif
+uint16_t ReceiverAtomJoyStick::getChannelRaw(size_t index) const
+{
+    if (index < STICK_COUNT) {
+        return static_cast<uint16_t>(_sticks[index].rawQ12dot4 >> 2);
+    }
+    if (index >= _auxiliaryChannelCount + STICK_COUNT) {
+        return CHANNEL_LOW;
+    }
+    return getSwitch(index - STICK_COUNT) ? CHANNEL_HIGH : CHANNEL_LOW;
 }
 
 esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const // NOLINT(readability-convert-member-functions-to-static)
@@ -170,6 +182,11 @@ int32_t ReceiverAtomJoyStick::ubyte4float_to_Q12dot4(const uint8_t f[4]) // NOLI
 
     const int32_t i = static_cast<int32_t>(mantissa >> ((22U-11U) - (exponent - 0x80U))); // -Wshift-count-overflow NOLINT(hicpp-use-auto,modernize-use-auto)
     return sign ? -i : i;
+}
+
+bool ReceiverAtomJoyStick::unpackPacket()
+{
+    return unpackPacket(CHECK_PACKET);
 }
 
 /*!
@@ -234,19 +251,19 @@ void ReceiverAtomJoyStick::setCurrentReadingsToBias()
     }
 }
 
-int32_t ReceiverAtomJoyStick::normalizedStick(int stickIndex) const
+float ReceiverAtomJoyStick::normalizedStick(int stickIndex) const
 {
     const stick_t stick = _sticks[stickIndex];
     if (!_biasIsSet) {
-        return stick.rawQ12dot4;
+       return Q12dot4_to_float(stick.rawQ12dot4);
     }
 
     const int32_t ret = stick.rawQ12dot4 - stick.biasQ12dot4;
     if (ret < -stick.deadbandQ12dot4) {
-        return -(-stick.deadbandQ12dot4 - ret); // (stick.bias - stick.deadband/2 - min);
+        return -Q12dot4_to_float(-stick.deadbandQ12dot4 - ret); // (stick.bias - stick.deadband/2 - min);
     }
     if (ret > stick.deadbandQ12dot4) {
-        return (ret - stick.deadbandQ12dot4); // (max - stick.bias - stick.deadband/2);
+        return Q12dot4_to_float(ret - stick.deadbandQ12dot4); // (max - stick.bias - stick.deadband/2);
     }
     return 0.0F;
 }

@@ -2,7 +2,7 @@
 
 
 ReceiverSBUS::ReceiverSBUS(const port_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverSerial(pins, uartIndex, baudrate, SBUS_DATA_BITS, SBUS_STOP_BITS, SBUS_PARITY)
+    ReceiverSerial(pins, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
 {
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
@@ -10,38 +10,6 @@ ReceiverSBUS::ReceiverSBUS(const port_pins_t& pins, uint8_t uartIndex, uint32_t 
 ReceiverSBUS::ReceiverSBUS(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
     ReceiverSBUS(port_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
 {
-}
-
-bool ReceiverSBUS::onDataReceived(uint8_t data)
-{
-    const timeUs32_t timeNowUs = timeUs();
-
-    enum { TIME_ALLOWANCE = 500 };
-    if (timeNowUs > _startTime + SBUS_TIME_NEEDED_PER_FRAME + TIME_ALLOWANCE) {
-        _packetIndex = 0;
-        ++_droppedPacketCount;
-    }
-
-    if (_packetIndex == 0) {
-        if (data != SBUS_START_BYTE) {
-            _packetIsEmpty = true;
-            return false;
-        }
-        _startTime = timeNowUs;
-    }
-
-    _packet[_packetIndex++] = data;
-
-    if (_packetIndex == PACKET_SIZE) {
-        _packetIndex = 0;
-        if (_packet[PACKET_SIZE - 1] != SBUS_END_BYTE) {
-            ++_errorPacketCount;
-            _packetIsEmpty = true;
-            return false;
-        }
-    }
-    unpackPacket();
-    return true;
 }
 
 /*!
@@ -55,22 +23,52 @@ void ReceiverSBUS::getStickValues(float& throttleStick, float& rollStick, float&
     yawStick = static_cast<float>(_channels[YAW] - CHANNEL_MIDDLE) / CHANNEL_RANGE;;
 }
 
-uint32_t ReceiverSBUS::getAuxiliaryChannel(size_t index) const
+uint16_t ReceiverSBUS::getChannelRaw(size_t index) const
 {
-    if (index >= _auxiliaryChannelCount || index < STICK_COUNT) {
+    if (index >= CHANNEL_COUNT) {
         return CHANNEL_LOW;
     }
-    return _channels[index - STICK_COUNT];
+    return _channels[index];
 }
 
-ReceiverBase::controls_pwm_t ReceiverSBUS::getControlsPWM() const
+/*!
+Called from within ReceiverSerial ISR.
+*/
+bool ReceiverSBUS::onDataReceived(uint8_t data)
 {
-    return controls_pwm_t {
-        _channels[THROTTLE],
-        _channels[ROLL],
-        _channels[PITCH],
-        _channels[YAW]
-    };
+#if !defined(FRAMEWORK_TEST)
+    const timeUs32_t timeNowUs = timeUs();
+#else
+    const timeUs32_t timeNowUs = 0;
+#endif
+
+    enum { TIME_ALLOWANCE = 500 };
+    if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME + TIME_ALLOWANCE) {
+        _packetIndex = 0;
+        ++_droppedPacketCount;
+    }
+
+    if (_packetIndex == 0) {
+        if (data != SBUS_START_BYTE) {
+            _packetIsEmpty = true;
+            return false;
+        }
+        _startTime = timeNowUs;
+    }
+
+    _packetISR[_packetIndex++] = data;
+
+    if (_packetIndex == PACKET_SIZE) {
+        _packetIndex = 0;
+        if (_packetISR[PACKET_SIZE - 1] != SBUS_END_BYTE) {
+            ++_errorPacketCount;
+            _packetIsEmpty = true;
+            return false;
+        }
+        _packet = _packetISR;
+        return true;
+    }
+    return false;
 }
 
 /*!

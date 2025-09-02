@@ -25,17 +25,27 @@ bool ReceiverNull::update(uint32_t tickCountDelta)
     return true;
 }
 
-
-void ReceiverNull::getStickValues(float&  throttleStick, float&  rollStick, float&  pitchStick, float&  yawStick) const
+bool ReceiverNull::unpackPacket()
 {
-    throttleStick = Q12dot4_to_float(_controls.throttleStickQ12dot4);
-    rollStick = Q12dot4_to_float(_controls.rollStickQ12dot4);
-    pitchStick = Q12dot4_to_float(_controls.pitchStickQ12dot4);
-    yawStick = Q12dot4_to_float(_controls.yawStickQ12dot4);
+    return true;
 }
 
-uint32_t ReceiverNull::getAuxiliaryChannel(size_t index) const
+void ReceiverNull::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
+{
+    throttleStick = _controls.throttle;
+    rollStick = _controls.roll;
+    pitchStick = _controls.pitch;
+    yawStick = _controls.yaw;
+}
+
+uint16_t ReceiverNull::getChannelRaw(size_t index) const
 {
     // map switches to the auxiliary channels
-    return (index >= _auxiliaryChannelCount) ? CHANNEL_LOW : getSwitch(index) ? CHANNEL_HIGH : CHANNEL_LOW;
+    if (index < STICK_COUNT) {
+        return CHANNEL_LOW;
+    }
+    if (index >= _auxiliaryChannelCount + STICK_COUNT) {
+        return CHANNEL_LOW;
+    }
+    return getSwitch(index - STICK_COUNT) ? CHANNEL_HIGH : CHANNEL_LOW;
 }

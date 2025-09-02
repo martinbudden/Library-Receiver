@@ -56,6 +56,7 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
 {
 #if defined(FRAMEWORK_USE_FREERTOS)
 
+    // BaseType_t is int, TickType_t is uint32_t
     if (_taskIntervalMicroSeconds == 0) {
         // event driven scheduling
         while (true) {
@@ -69,7 +70,6 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
         }
     } else {
         // time based scheduling
-        // pdMS_TO_TICKS Converts a time in milliseconds to a time in ticks.
         const uint32_t taskIntervalTicks = _taskIntervalMicroSeconds < 1000 ? 1 : pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
         _previousWakeTimeTicks = xTaskGetTickCount();
 

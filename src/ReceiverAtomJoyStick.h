@@ -22,11 +22,11 @@ public:
 
     virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) override;
     virtual bool update(uint32_t tickCountDelta) override;
-    virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
+    virtual void getStickValues(float& throttle, float& roll, float& pitch, float& yaw) const override;
     virtual EUI_48_t getMyEUI() const override;
     virtual EUI_48_t getPrimaryPeerEUI() const override;
     virtual void broadcastMyEUI() const override;
-    uint32_t getAuxiliaryChannel(size_t index) const override;
+    uint16_t getChannelRaw(size_t index) const override;
 
     ESPNOW_Transceiver& getESPNOW_Transceiver() { return _transceiver; }
     static int32_t ubyte4float_to_Q12dot4(const uint8_t f[4]);
@@ -37,12 +37,13 @@ private:
     enum { DEFAULT_BROADCAST_COUNT = 20, DEFAULT_BROADCAST_DELAY_MS = 50 };
     esp_err_t broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const;
     esp_err_t broadcastMyMacAddressForBinding() const { return broadcastMyMacAddressForBinding(DEFAULT_BROADCAST_COUNT, DEFAULT_BROADCAST_DELAY_MS); }
+    virtual bool unpackPacket() override;
     enum checkPacket_t { CHECK_PACKET, DONT_CHECK_PACKET };
     bool unpackPacket(checkPacket_t checkPacket);
     void resetSticks();
     void setDeadband(int32_t deadband);
     void setCurrentReadingsToBias();
-    int32_t normalizedStick(int stickIndex) const;
+    float normalizedStick(int stickIndex) const;
 private:
     struct stick_t {
         int32_t rawQ12dot4 {0};
@@ -52,10 +53,7 @@ private:
 private:
     ESPNOW_Transceiver _transceiver;
     ESPNOW_Transceiver::received_data_t _received_data;
-    uint32_t _packetCount {0};
     uint32_t _receivedPacketCount {0};
-    int32_t _droppedPacketCount {0};
-    int32_t _droppedPacketCountPrevious {0};
     std::array<stick_t, STICK_COUNT> _sticks {};
     enum { PACKET_SIZE = 25 };
     uint8_t _packet[PACKET_SIZE] {};

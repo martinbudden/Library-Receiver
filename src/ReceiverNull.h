@@ -17,13 +17,11 @@ private:
 public:
     virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) override;
     virtual bool update(uint32_t tickCountDelta) override;
+    virtual bool unpackPacket() override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
-    virtual uint32_t getAuxiliaryChannel(size_t index) const override;
+    virtual uint16_t getChannelRaw(size_t index) const override;
 public: // for testing
     void setControls(const controls_t& controls) { _controls = controls; }
 private:
-    uint32_t _packetCount {0};
     uint32_t _receivedPacketCount {0};
-    int32_t _droppedPacketCount {0};
-    int32_t _droppedPacketCountPrevious {0};
 };

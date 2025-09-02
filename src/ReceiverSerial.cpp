@@ -29,6 +29,7 @@ void ReceiverSerial::dataReadyISR()
         // Read 1 byte from UART buffer and give it to the RX protocol parser
         const uint8_t data = uart_getc(uart1); // NOLINT(cppcoreguidelines-init-variables) false positive
         if (receiver->onDataReceived(data)) {
+            // onDataReceived returns true once packet is complete
             receiver->SIGNAL_DATA_READY_FROM_ISR();
         }
     }
@@ -87,7 +88,7 @@ void ReceiverSerial::init()
 }
 
 /*!
-This should wait for data from the serial UART
+This waits for data from the serial UART
 */
 int32_t ReceiverSerial::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
 {
@@ -95,9 +96,9 @@ int32_t ReceiverSerial::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
 }
 
 /*!
-If a packet was received from the atomJoyStickReceiver then unpack it and inform the receiver target that new stick values are available.
+If a packet was received then unpack it and return true.
 
-Returns true if a packet has been received.
+Returns false if an empty or invalid packet was received.
 */
 bool ReceiverSerial::update(uint32_t tickCountDelta)
 {
@@ -105,14 +106,19 @@ bool ReceiverSerial::update(uint32_t tickCountDelta)
         return false;
     }
 
+    if (!unpackPacket()) {
+        return false;
+    }
+
     _packetReceived = true;
-    _droppedPacketCountPrevious = _droppedPacketCount;
+    ++_packetCount;
 
     // record tickoutDelta for instrumentation
     _tickCountDelta = tickCountDelta;
 
     // track dropped packets
-    ++_packetCount;
+    _droppedPacketCountDelta = _droppedPacketCount - _droppedPacketCountPrevious;
+    _droppedPacketCountPrevious = _droppedPacketCount;
 
     // NOTE: there is no mutex around this flag
     _newPacketAvailable = true;
