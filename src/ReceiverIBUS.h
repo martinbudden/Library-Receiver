@@ -6,7 +6,7 @@
 
 
 /*!
-IBUS receiver protocol, used by FlSky receivers.
+IBUS receiver protocol, used by Flysky receivers.
 */
 class ReceiverIBUS : public ReceiverSerial {
 public:

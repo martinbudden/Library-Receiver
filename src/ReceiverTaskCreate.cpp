@@ -1,12 +1,6 @@
 #include "ReceiverBase.h"
 #include "ReceiverTask.h"
 
-#if defined(USE_DEBUG_PRINTF_TASK_INFORMATION)
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
-#include <HardwareSerial.h>
-#endif
-#endif
-
 #include <TaskBase.h>
 #include <array>
 #include <cstring>
@@ -16,6 +10,7 @@
 #include <freertos/FreeRTOSConfig.h>
 #include <freertos/task.h>
 #endif
+
 
 ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID)
 {
@@ -37,14 +32,6 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
 {
     static ReceiverTask receiverTask(taskIntervalMicroSeconds, receiver, radioController, receiverWatcher);
 
-#if defined(FRAMEWORK_USE_FREERTOS)
-#if defined(USE_DEBUG_PRINTF_TASK_INFORMATION)
-    if (taskIntervalMicroSeconds == 0) {
-        Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task is interrupt driven\r\n", coreID, priority);
-    } else {
-        Serial.printf("**** ReceiverTask,           core:%u, priority:%u, task interval:%ums\r\n\r\n", coreID, priority, taskIntervalMicroSeconds / 1000);
-    }
-#endif //USE_DEBUG_PRINTF_TASK_INFORMATION
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
         .task = &receiverTask,
@@ -52,8 +39,7 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
 #if !defined(RECEIVER_TASK_STACK_DEPTH_BYTES)
     enum { RECEIVER_TASK_STACK_DEPTH_BYTES = 4096 };
 #endif
-    static std::array<StackType_t, RECEIVER_TASK_STACK_DEPTH_BYTES> stack;
-    static StaticTask_t taskBuffer;
+    static std::array<uint8_t, RECEIVER_TASK_STACK_DEPTH_BYTES> stack;
     taskInfo = {
         .taskHandle = nullptr,
         .name = "ReceiverTask", // max length 16, including zero terminator
@@ -61,10 +47,13 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
         .stackBuffer = &stack[0],
         .priority = priority,
         .coreID = coreID,
+        .taskIntervalMicroSeconds = taskIntervalMicroSeconds
     };
-    assert(std::strlen(taskInfo.name) < configMAX_TASK_NAME_LEN && "ReceiverTask: taskname too long");
-    assert(taskInfo.priority < configMAX_PRIORITIES && "ReceiverTask: priority too high");
+#if defined(FRAMEWORK_USE_FREERTOS)
+    assert(std::strlen(taskInfo.name) < configMAX_TASK_NAME_LEN);
+    assert(taskInfo.priority < configMAX_PRIORITIES);
 
+    static StaticTask_t taskBuffer;
     taskInfo.taskHandle = xTaskCreateStaticPinnedToCore(
         ReceiverTask::Task,
         taskInfo.name,
@@ -77,9 +66,8 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
     );
     assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask.");
 #else
-    (void)taskInfo;
-    (void)priority;
-    (void)coreID;
+    (void)taskParameters;
 #endif // FRAMEWORK_USE_FREERTOS
+
     return &receiverTask;
 }
