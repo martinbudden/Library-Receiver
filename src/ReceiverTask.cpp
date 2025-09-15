@@ -4,8 +4,13 @@
 #include <TimeMicroSeconds.h>
 
 #if defined(FRAMEWORK_USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS_SUBDIRECTORY)
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#else
+#include <FreeRTOS.h>
+#include <task.h>
+#endif
 #endif
 
 
@@ -24,7 +29,7 @@ void ReceiverTask::loop()
 {
     // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than taskIntervalTicks
 #if defined(FRAMEWORK_USE_FREERTOS)
-    const TickType_t tickCount = xTaskGetTickCount();
+    const TickType_t tickCount = xTaskGetTickCount(); // NOLINT(cppcoreguidelines-init-variables) false positive
 #else
     const uint32_t tickCount = timeUs() / 1000;
     //const uint32_t timeMicroSeconds = timeUs();

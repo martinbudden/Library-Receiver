@@ -58,7 +58,7 @@ IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress, ui
 {
     transceiver = this;
     memcpy(&_myMacAddress[0], myMacAddress, ESP_NOW_ETH_ALEN);
-#if defined(FRAMEWORK_USE_FREERTOS)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
     _primaryDataReceivedQueue = xQueueCreateStatic(DATA_READY_QUEUE_LENGTH, sizeof(_primaryDataReceivedQueueItem), &_primaryDataReceivedQueueStorageArea[0], &_primaryDataReceivedQueueStatic);
     configASSERT(_primaryDataReceivedQueue);
     const UBaseType_t primaryMessageCount = uxQueueMessagesWaiting(_primaryDataReceivedQueue);

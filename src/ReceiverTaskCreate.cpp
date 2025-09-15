@@ -6,29 +6,35 @@
 #include <cstring>
 
 #if defined(FRAMEWORK_USE_FREERTOS)
+#if defined(FRAMEWORK_USE_FREERTOS_SUBDIRECTORY)
 #include <freertos/FreeRTOS.h>
 #include <freertos/FreeRTOSConfig.h>
 #include <freertos/task.h>
+#else
+#include <FreeRTOS.h>
+#include <FreeRTOSConfig.h>
+#include <task.h>
+#endif
 #endif
 
 
-ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID)
+ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core)
 {
-    return createTask(receiver, radioController, receiverWatcher, priority, coreID, 0);
+    return createTask(receiver, radioController, receiverWatcher, priority, core, 0);
 }
 
-ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID) // NOLINT(readability-convert-member-functions-to-static)
+ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core) // NOLINT(readability-convert-member-functions-to-static)
 {
-    return createTask(taskInfo, receiver, radioController, receiverWatcher, priority, coreID, 0);
+    return createTask(taskInfo, receiver, radioController, receiverWatcher, priority, core, 0);
 }
 
-ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds)
+ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroSeconds)
 {
     task_info_t taskInfo {}; // NOLINT(cppcoreguidelines-init-variables) false positive
-    return createTask(taskInfo, receiver, radioController, receiverWatcher, priority, coreID, taskIntervalMicroSeconds);
+    return createTask(taskInfo, receiver, radioController, receiverWatcher, priority, core, taskIntervalMicroSeconds);
 }
 
-ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint8_t coreID, uint32_t taskIntervalMicroSeconds) // NOLINT(readability-convert-member-functions-to-static)
+ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroSeconds) // NOLINT(readability-convert-member-functions-to-static)
 {
     static ReceiverTask receiverTask(taskIntervalMicroSeconds, receiver, radioController, receiverWatcher);
 
@@ -39,14 +45,18 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
 #if !defined(RECEIVER_TASK_STACK_DEPTH_BYTES)
     enum { RECEIVER_TASK_STACK_DEPTH_BYTES = 4096 };
 #endif
+#if defined(FRAMEWORK_ESPIDF) || defined(FRAMEWORK_ARDUINO_ESP32) || defined(FRAMEWORK_TEST)
     static std::array<uint8_t, RECEIVER_TASK_STACK_DEPTH_BYTES> stack;
+#else
+    static std::array<StackType_t, RECEIVER_TASK_STACK_DEPTH_BYTES / sizeof(StackType_t)> stack;
+#endif
     taskInfo = {
         .taskHandle = nullptr,
         .name = "ReceiverTask", // max length 16, including zero terminator
-        .stackDepth = RECEIVER_TASK_STACK_DEPTH_BYTES,
-        .stackBuffer = &stack[0],
+        .stackDepthBytes = RECEIVER_TASK_STACK_DEPTH_BYTES,
+        .stackBuffer = reinterpret_cast<uint8_t*>(&stack[0]), // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
         .priority = priority,
-        .coreID = coreID,
+        .core = core,
         .taskIntervalMicroSeconds = taskIntervalMicroSeconds
     };
 #if defined(FRAMEWORK_USE_FREERTOS)
@@ -54,17 +64,31 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
     assert(taskInfo.priority < configMAX_PRIORITIES);
 
     static StaticTask_t taskBuffer;
+#if defined(FRAMEWORK_ESPIDF) || defined(FRAMEWORK_ARDUINO_ESP32)
     taskInfo.taskHandle = xTaskCreateStaticPinnedToCore(
         ReceiverTask::Task,
         taskInfo.name,
-        taskInfo.stackDepth / sizeof(StackType_t),
+        taskInfo.stackDepthBytes / sizeof(StackType_t),
         &taskParameters,
         taskInfo.priority,
-        taskInfo.stackBuffer,
+        &stack[0],
         &taskBuffer,
-        taskInfo.coreID
+        taskInfo.core
     );
     assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask.");
+#else
+    taskInfo.taskHandle = xTaskCreateStaticAffinitySet(
+        ReceiverTask::Task,
+        taskInfo.name,
+        taskInfo.stackDepthBytes / sizeof(StackType_t),
+        &taskParameters,
+        taskInfo.priority,
+        &stack[0],
+        &taskBuffer,
+        taskInfo.core
+    );
+    assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask.");
+#endif
 #else
     (void)taskParameters;
 #endif // FRAMEWORK_USE_FREERTOS

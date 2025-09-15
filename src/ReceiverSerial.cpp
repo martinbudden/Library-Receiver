@@ -21,9 +21,9 @@ Pointer to the receiver used by the ISR.
 ReceiverSerial* ReceiverSerial::receiver;
 
 
-void ReceiverSerial::dataReadyISR()
-{
 #if defined(FRAMEWORK_RPI_PICO)
+void __not_in_flash_func(ReceiverSerial::dataReadyISR)() // NOLINT(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
+{
     //gpio_put(PICO_DEFAULT_LED_PIN, 1);
     while (uart_is_readable(uart1)) {
         // Read 1 byte from UART buffer and give it to the RX protocol parser
@@ -33,10 +33,13 @@ void ReceiverSerial::dataReadyISR()
             receiver->SIGNAL_DATA_READY_FROM_ISR();
         }
     }
-#else
-    receiver->SIGNAL_DATA_READY_FROM_ISR();
-#endif
 }
+#else
+FAST_CODE void ReceiverSerial::dataReadyISR()
+{
+    receiver->SIGNAL_DATA_READY_FROM_ISR();
+}
+#endif
 
 ReceiverSerial::ReceiverSerial(const port_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) :
     _pins(pins),
