@@ -92,7 +92,7 @@ bool ReceiverSBUS::unpackPacket()
         _packetIsEmpty = true;
         return false;
     }
-    // SBUS uses AETR (Ailerons, Elevator, Throttle, Rudder), ie ROLL, PITCH, THROTTLE, YAW 
+    // SBUS uses AETR (Ailerons, Elevator, Throttle, Rudder), ie ROLL, PITCH, THROTTLE, YAW
     // This is the default, so no reordering required
     _channels[0]  = _packet[1]     | _packet[2]<<8;
     _channels[1]  = _packet[2]>>3  | _packet[3]<<5;

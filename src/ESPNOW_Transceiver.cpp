@@ -1,16 +1,12 @@
 
 #include "ESPNOW_Transceiver.h"
+#include <cassert>
 #include <cstring>
 
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <HardwareSerial.h>
 #include <cstring>
 #include <esp_wifi.h>
-
-//#define USE_INSTRUMENTATION
-#if defined(USE_INSTRUMENTATION)
-#include <freertos/FreeRTOS.h>
-#endif
 #endif
 
 // see https://github.com/espressif/esp-idf/blob/v5.3.1/components/esp_wifi/include/esp_now.h

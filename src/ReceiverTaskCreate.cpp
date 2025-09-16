@@ -3,14 +3,18 @@
 
 #include <TaskBase.h>
 #include <array>
+#include <cassert>
 #include <cstring>
 
 #if defined(FRAMEWORK_USE_FREERTOS)
-#if defined(FRAMEWORK_USE_FREERTOS_SUBDIRECTORY)
+#if defined(FRAMEWORK_ESPIDF) || defined(FRAMEWORK_ARDUINO_ESP32)
 #include <freertos/FreeRTOS.h>
 #include <freertos/FreeRTOSConfig.h>
 #include <freertos/task.h>
 #else
+#if defined(FRAMEWORK_ARDUINO_STM32)
+#include <STM32FreeRTOS.h>
+#endif
 #include <FreeRTOS.h>
 #include <FreeRTOSConfig.h>
 #include <task.h>
@@ -45,7 +49,7 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
 #if !defined(RECEIVER_TASK_STACK_DEPTH_BYTES)
     enum { RECEIVER_TASK_STACK_DEPTH_BYTES = 4096 };
 #endif
-#if defined(FRAMEWORK_ESPIDF) || defined(FRAMEWORK_ARDUINO_ESP32) || defined(FRAMEWORK_TEST)
+#if defined(FRAMEWORK_ESPIDF) || defined(FRAMEWORK_ARDUINO_ESP32) || !defined(FRAMEWORK_USE_FREERTOS)
     static std::array<uint8_t, RECEIVER_TASK_STACK_DEPTH_BYTES> stack;
 #else
     static std::array<StackType_t, RECEIVER_TASK_STACK_DEPTH_BYTES / sizeof(StackType_t)> stack;
@@ -75,8 +79,8 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
         &taskBuffer,
         taskInfo.core
     );
-    assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask.");
-#else
+    assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask");
+#elif defined(FRAMEWORK_RPI_PICO) || defined(FRAMEWORK_ARDUINO_RPI_PICO)
     taskInfo.taskHandle = xTaskCreateStaticAffinitySet(
         ReceiverTask::Task,
         taskInfo.name,
@@ -87,7 +91,19 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
         &taskBuffer,
         taskInfo.core
     );
-    assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask.");
+    assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask");
+#else
+    taskInfo.taskHandle = xTaskCreateStatic(
+        ReceiverTask::Task,
+        taskInfo.name,
+        taskInfo.stackDepthBytes / sizeof(StackType_t),
+        &taskParameters,
+        taskInfo.priority,
+        &stack[0],
+        &taskBuffer
+    );
+    assert(taskInfo.taskHandle != nullptr && "Unable to create ReceiverTask");
+    // vTaskCoreAffinitySet(taskInfo.taskHandle, taskInfo.core);
 #endif
 #else
     (void)taskParameters;
