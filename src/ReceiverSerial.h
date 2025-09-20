@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ReceiverBase.h"
-#include <TimeMicroSeconds.h>
+#include <TimeMicroseconds.h>
 #include <array>
 
 #if defined(FRAMEWORK_USE_FREERTOS)

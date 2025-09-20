@@ -36,12 +36,7 @@ Called from within ReceiverSerial ISR.
 */
 bool ReceiverSBUS::onDataReceived(uint8_t data)
 {
-#if !defined(FRAMEWORK_TEST)
     const timeUs32_t timeNowUs = timeUs();
-#else
-    const timeUs32_t timeNowUs = 0;
-#endif
-
     enum { TIME_ALLOWANCE = 500 };
     if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME + TIME_ALLOWANCE) {
         _packetIndex = 0;
@@ -72,7 +67,7 @@ bool ReceiverSBUS::onDataReceived(uint8_t data)
 }
 
 /*!
-Check the packet if `checkPacket` set. If the packet is valid then unpack it into the member data and set the packet to empty.
+If the packet is valid then unpack it into the member data and set the packet to empty.
 
 Returns true if a valid packet received, false otherwise.
 

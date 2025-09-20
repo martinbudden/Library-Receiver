@@ -8,10 +8,10 @@ class ReceiverWatcher;
 
 class ReceiverTask : public TaskBase {
 public:
-    ReceiverTask(uint32_t taskIntervalMicroSeconds, ReceiverBase& receiver, RadioControllerBase& RadioController, ReceiverWatcher* receiverWatcher);
+    ReceiverTask(uint32_t taskIntervalMicroseconds, ReceiverBase& receiver, RadioControllerBase& RadioController, ReceiverWatcher* receiverWatcher);
 public:
-    static ReceiverTask* createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& RadioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroSeconds);
-    static ReceiverTask* createTask(ReceiverBase& receiver, RadioControllerBase& RadioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroSeconds);
+    static ReceiverTask* createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& RadioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds);
+    static ReceiverTask* createTask(ReceiverBase& receiver, RadioControllerBase& RadioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds);
     static ReceiverTask* createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& RadioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core);
     static ReceiverTask* createTask(ReceiverBase& receiver, RadioControllerBase& RadioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core);
 public:

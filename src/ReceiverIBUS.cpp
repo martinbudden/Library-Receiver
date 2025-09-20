@@ -36,17 +36,12 @@ Called from within ReceiverSerial ISR.
 */
 bool ReceiverIBUS::onDataReceived(uint8_t data)
 {
-#if !defined(FRAMEWORK_TEST)
     const timeUs32_t timeNowUs = timeUs();
-
     enum { TIME_ALLOWANCE = 500 };
     if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME) {
         _packetIndex = 0;
         ++_droppedPacketCount;
     }
-#else
-    const timeUs32_t timeNowUs = 0;
-#endif
 
     enum { IA6_SYNC_BYTE = 0x55 };
     if (_packetIndex == 0) {
@@ -97,6 +92,7 @@ Returns true if a valid packet received, false otherwise.
 bool ReceiverIBUS::unpackPacket()
 {
     if (calculateChecksum() != getReceivedChecksum()) {
+        _packetIsEmpty = true;
         return false;
     }
 
@@ -112,5 +108,6 @@ bool ReceiverIBUS::unpackPacket()
         _channels[ii] = ((_packet[offset] & 0xF0) >> 4) | (_packet[offset + 2] & 0xF0) | ((_packet[offset + 4] & 0xF0) << 4);
         offset += 6; // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
     }
+    _packetIsEmpty = false;
     return true;
 }

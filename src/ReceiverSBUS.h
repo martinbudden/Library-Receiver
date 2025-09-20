@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ReceiverSerial.h"
-#include <TimeMicroSeconds.h>
+#include <TimeMicroseconds.h>
 #include <array>
 
 /*!

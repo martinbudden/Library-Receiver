@@ -32,15 +32,15 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
     return createTask(taskInfo, receiver, radioController, receiverWatcher, priority, core, 0);
 }
 
-ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroSeconds)
+ReceiverTask* ReceiverTask::createTask(ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds)
 {
     task_info_t taskInfo {}; // NOLINT(cppcoreguidelines-init-variables) false positive
-    return createTask(taskInfo, receiver, radioController, receiverWatcher, priority, core, taskIntervalMicroSeconds);
+    return createTask(taskInfo, receiver, radioController, receiverWatcher, priority, core, taskIntervalMicroseconds);
 }
 
-ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroSeconds) // NOLINT(readability-convert-member-functions-to-static)
+ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds) // NOLINT(readability-convert-member-functions-to-static)
 {
-    static ReceiverTask receiverTask(taskIntervalMicroSeconds, receiver, radioController, receiverWatcher);
+    static ReceiverTask receiverTask(taskIntervalMicroseconds, receiver, radioController, receiverWatcher);
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive
@@ -61,7 +61,7 @@ ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, ReceiverBase& rece
         .stackBuffer = reinterpret_cast<uint8_t*>(&stack[0]), // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
         .priority = priority,
         .core = core,
-        .taskIntervalMicroSeconds = taskIntervalMicroSeconds
+        .taskIntervalMicroseconds = taskIntervalMicroseconds
     };
 #if defined(FRAMEWORK_USE_FREERTOS)
     assert(std::strlen(taskInfo.name) < configMAX_TASK_NAME_LEN);

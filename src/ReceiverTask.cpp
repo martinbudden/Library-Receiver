@@ -1,7 +1,7 @@
 #include "ReceiverTask.h"
 #include "RadioControllerBase.h"
 
-#include <TimeMicroSeconds.h>
+#include <TimeMicroseconds.h>
 
 #if defined(FRAMEWORK_USE_FREERTOS)
 #if defined(FRAMEWORK_ESPIDF) || defined(FRAMEWORK_ARDUINO_ESP32)
@@ -17,8 +17,8 @@
 #endif
 
 
-ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroSeconds, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher) :
-    TaskBase(taskIntervalMicroSeconds),
+ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroseconds, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher) :
+    TaskBase(taskIntervalMicroseconds),
     _receiver(receiver),
     _radioController(radioController),
     _receiverWatcher(receiverWatcher)
@@ -34,10 +34,7 @@ void ReceiverTask::loop()
 #if defined(FRAMEWORK_USE_FREERTOS)
     const TickType_t tickCount = xTaskGetTickCount(); // NOLINT(cppcoreguidelines-init-variables) false positive
 #else
-    const uint32_t tickCount = timeUs() / 1000;
-    //const uint32_t timeMicroSeconds = timeUs();
-    //_timeMicroSecondsDelta = timeMicroSeconds - _timeMicroSecondsPrevious;
-    //_timeMicroSecondsPrevious = timeMicroSeconds;
+    const uint32_t tickCount = timeMs();
 #endif
 
     _tickCountDelta = tickCount - _tickCountPrevious;
@@ -65,7 +62,7 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
 #if defined(FRAMEWORK_USE_FREERTOS)
 
     // BaseType_t is int, TickType_t is uint32_t
-    if (_taskIntervalMicroSeconds == 0) {
+    if (_taskIntervalMicroseconds == 0) {
         // event driven scheduling
         while (true) {
             const uint32_t ticksToWait = _radioController.getTimeoutTicks();
@@ -78,7 +75,7 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
         }
     } else {
         // time based scheduling
-        const uint32_t taskIntervalTicks = _taskIntervalMicroSeconds < 1000 ? 1 : pdMS_TO_TICKS(_taskIntervalMicroSeconds / 1000);
+        const uint32_t taskIntervalTicks = _taskIntervalMicroseconds < 1000 ? 1 : pdMS_TO_TICKS(_taskIntervalMicroseconds / 1000);
         _previousWakeTimeTicks = xTaskGetTickCount();
 
         while (true) {
