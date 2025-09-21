@@ -1,14 +1,14 @@
 #include "ReceiverSBUS.h"
 
 
-ReceiverSBUS::ReceiverSBUS(const port_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
+ReceiverSBUS::ReceiverSBUS(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
     ReceiverSerial(pins, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
 {
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
 
 ReceiverSBUS::ReceiverSBUS(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverSBUS(port_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
+    ReceiverSBUS(stm32_rx_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
 {
 }
 

@@ -16,9 +16,32 @@
 #include <queue.h>
 #endif
 #endif
+
 #if defined(FRAMEWORK_RPI_PICO)
 #include <hardware/uart.h>
 #include <pico/mutex.h>
+#elif defined(FRAMEWORK_ESPIDF)
+#elif defined(FRAMEWORK_TEST)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
+
+#if defined(FRAMEWORK_STM32_CUBE_F1)
+#include <stm32f1xx_hal.h>
+#include <stm32f1xx_hal_gpio.h>
+#include <stm32f1xx_hal_uart.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F3)
+#include <stm32f3xx_hal.h>
+#include <stm32f3xx_hal_gpio.h>
+#include <stm32f3xx_hal_uart.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F4)
+#include <stm32f4xx_hal.h>
+#include <stm32f4xx_hal_gpio.h>
+#include <stm32f4xx_hal_uart.h>
+#elif defined(FRAMEWORK_STM32_CUBE_F7)
+#include <stm32f7xx_hal.h>
+#include <stm32f7xx_hal_gpio.h>
+#include <stm32f7xx_hal_uart.h>
+#endif
+
 #endif
 
 
@@ -33,12 +56,12 @@ public:
         uint8_t rx;
         uint8_t tx;
     };
-    struct port_pins_t {
+    struct stm32_rx_pins_t {
         port_pin_t rx;
         port_pin_t tx;
     };
 public:
-    ReceiverSerial(const port_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
+    ReceiverSerial(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
     void init();
 private:
     // Receiver is not copyable or moveable
@@ -62,7 +85,7 @@ protected:
     timeUs32_t _startTime {};
 private:
     static ReceiverSerial* receiver; //!< alias of `this` to be used in interrupt service routine
-    port_pins_t _pins {};
+    stm32_rx_pins_t _pins {};
     const uint8_t _uartIndex;
     const uint8_t _dataBits;
     const uint8_t _stopBits;
@@ -70,6 +93,8 @@ private:
     const uint32_t _baudrate;
 #if defined(FRAMEWORK_RPI_PICO)
     uart_inst_t* _uart {};
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
+    UART_HandleTypeDef _uart {};
 #endif
 
 #if defined(FRAMEWORK_USE_FREERTOS)

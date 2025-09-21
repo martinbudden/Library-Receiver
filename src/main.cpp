@@ -1,7 +1,30 @@
 #if defined (USE_EMPTY_SETUP_LOOP)
 
-#include <Arduino.h>
+#if defined(FRAMEWORK_RPI_PICO)
+int main()
+{
+    return 0;
+}
 
+#elif defined(FRAMEWORK_ESPIDF)
+
+extern "C" void app_main()
+{
+    return 0;
+}
+
+#elif defined(FRAMEWORK_STM32_CUBE)
+
+int main()
+{
+    return 0;
+}
+
+#elif defined(FRAMEWORK_TEST)
+
+#else // defaults to FRAMEWORK_ARDUINO
+
+#include <Arduino.h>
 
 void setup()
 {
@@ -11,4 +34,6 @@ void loop()
 {
 }
 
-#endif
+#endif // FRAMEWORK
+
+#endif // USE_EMPTY_MAIN
