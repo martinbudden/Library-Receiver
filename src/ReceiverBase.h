@@ -66,6 +66,9 @@ public:
     virtual void broadcastMyEUI() const {}
 
     virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) = 0;
+    virtual bool onDataReceived(uint8_t data) { (void)data; return false; }
+    virtual bool isDataAvailable() const { return false; }
+    virtual uint8_t getByte() { return 0; }
     virtual bool update(uint32_t tickCountDelta) = 0;
     virtual bool unpackPacket() = 0;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const = 0;

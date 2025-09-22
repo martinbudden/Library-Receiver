@@ -1,6 +1,6 @@
 #include "ReceiverSerial.h"
 
-#if defined(FRAMEWORK_RPI_PICO)
+#if defined(FRAMEWORK_RPI_PICO) || defined(FRAMEWORK_ARDUINO_RPI_PICO)
 #include <hardware/gpio.h>
 #include <hardware/uart.h>
 #elif defined(FRAMEWORK_ESPIDF)
@@ -15,48 +15,51 @@ static inline uint16_t gpioPin(uint8_t pin) { return static_cast<uint16_t>(1U <<
 /*!
 Pointer to the receiver used by the ISR.
 */
-ReceiverSerial* ReceiverSerial::receiver;
+ReceiverSerial* ReceiverSerial::self;
 
 
-#if defined(FRAMEWORK_RPI_PICO)
+#if defined(FRAMEWORK_RPI_PICO) || defined(FRAMEWORK_ARDUINO_RPI_PICO)
 void __not_in_flash_func(ReceiverSerial::dataReadyISR)() // NOLINT(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
 {
     //gpio_put(PICO_DEFAULT_LED_PIN, 1);
-    while (uart_is_readable(uart1)) {
+    while (uart_is_readable(self->_uart)) {
         // Read 1 byte from UART buffer and give it to the RX protocol parser
-        const uint8_t data = uart_getc(uart1); // NOLINT(cppcoreguidelines-init-variables) false positive
-        if (receiver->onDataReceived(data)) {
+        const uint8_t data = uart_getc(self->_uart); // NOLINT(cppcoreguidelines-init-variables) false positive
+        if (self->onDataReceived(data)) {
             // onDataReceived returns true once packet is complete
-            receiver->SIGNAL_DATA_READY_FROM_ISR();
+            self->SIGNAL_DATA_READY_FROM_ISR();
         }
     }
 }
 #else
 FAST_CODE void ReceiverSerial::dataReadyISR()
 {
-    receiver->SIGNAL_DATA_READY_FROM_ISR();
+    self->SIGNAL_DATA_READY_FROM_ISR();
 }
 #endif
 
-ReceiverSerial::ReceiverSerial(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) :
+ReceiverSerial::ReceiverSerial(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) : // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     _pins(pins),
     _uartIndex(uartIndex),
     _dataBits(dataBits),
     _stopBits(stopBits),
     _parity(parity),
     _baudrate(baudrate)
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    ,_uart(uartIndex)
+#endif
 {
-    receiver = this;
+    self = this;
 }
 
 void ReceiverSerial::init()
 {
     _packetCount = 0;
-#if defined(FRAMEWORK_RPI_PICO)
+#if defined(FRAMEWORK_RPI_PICO) || defined(FRAMEWORK_ARDUINO_RPI_PICO)
     // see https://github.com/victorhook/asac-fc/blob/main/src/receiver.c
     _uart = uart_get_instance(_uartIndex);
 
-    uart_init(uart1, _baudrate);
+    uart_init(_uart, _baudrate);
     gpio_set_function(_pins.rx.pin, GPIO_FUNC_UART);
     gpio_set_function(_pins.tx.pin, GPIO_FUNC_UART);
 
@@ -117,7 +120,10 @@ void ReceiverSerial::init()
 #elif defined(FRAMEWORK_TEST)
 
 #else // defaults to FRAMEWORK_ARDUINO
-
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    const uint32_t config = (_parity == PARITY_NONE) ? SERIAL_8N1 : (_parity == PARITY_EVEN) ? SERIAL_8E1 : SERIAL_8O1; // NOLINT(cppcoreguidelines-init-variables)
+    _uart.begin(_baudrate, config, _pins.rx.pin, _pins.tx.pin);
+#endif
 #endif
 }
 
@@ -127,6 +133,51 @@ This waits for data from the serial UART
 int32_t ReceiverSerial::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
 {
     return WAIT_DATA_READY(ticksToWait);
+}
+
+bool ReceiverSerial::isDataAvailable() const
+{
+#if defined(FRAMEWORK_RPI_PICO) || defined(FRAMEWORK_ARDUINO_RPI_PICO)
+    return uart_is_readable(_uart);
+#elif defined(FRAMEWORK_ESPIDF)
+    return false;
+#elif defined(FRAMEWORK_STM32_CUBE)
+    return (__HAL_UART_GET_FLAG(&_uart, UART_FLAG_RXNE)) ? true : false;
+#elif defined(FRAMEWORK_TEST)
+    return false;
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    return const_cast<HardwareSerial&>(_uart).available() > 0;
+#else
+    return Serial.available() > 0;
+#endif
+#endif
+}
+
+uint8_t ReceiverSerial::getByte()
+{
+#if defined(FRAMEWORK_RPI_PICO) || defined(FRAMEWORK_ARDUINO_RPI_PICO)
+    return uart_getc(_uart);
+#elif defined(FRAMEWORK_ESPIDF)
+    return 0;
+#elif defined(FRAMEWORK_STM32_CUBE)
+#if false
+    uint8_t data; // Buffer to store received data
+    HAL_UART_Receive(&_uart, &data, sizeof(data), HAL_MAX_DELAY);
+#else
+    // read from uart
+    const uint8_t data = static_cast<uint8_t>(_uart.Instance->DR & 0xFF); // NOLINT(cppcoreguidelines-init-variables)
+#endif
+    return data;
+#elif defined(FRAMEWORK_TEST)
+    return 0;
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    return static_cast<uint8_t>(_uart.read());
+#else
+    return Serial.read();
+#endif
+#endif
 }
 
 /*!

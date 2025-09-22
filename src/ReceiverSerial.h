@@ -21,7 +21,6 @@
 #include <hardware/uart.h>
 #include <pico/mutex.h>
 #elif defined(FRAMEWORK_ESPIDF)
-#elif defined(FRAMEWORK_TEST)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
 
 #if defined(FRAMEWORK_STM32_CUBE_F1)
@@ -41,7 +40,11 @@
 #include <stm32f7xx_hal_gpio.h>
 #include <stm32f7xx_hal_uart.h>
 #endif
-
+#elif defined(FRAMEWORK_TEST)
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+#include <HardwareSerial.h>
+#endif
 #endif
 
 
@@ -71,9 +74,10 @@ private:
     ReceiverSerial& operator=(ReceiverSerial&&) = delete;
 public:
     virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) override;
+    virtual bool isDataAvailable() const override;
+    virtual uint8_t getByte() override;
     virtual bool update(uint32_t tickCountDelta) override;
     FAST_CODE static void dataReadyISR();
-    virtual bool onDataReceived(uint8_t data) = 0;
     bool isPacketEmpty() const { return _packetIsEmpty; }
     void setPacketEmpty() { _packetIsEmpty = true; }
     size_t getPacketIndex() const { return _packetIndex; } // for testing
@@ -84,17 +88,22 @@ protected:
     size_t _packetIndex {};
     timeUs32_t _startTime {};
 private:
-    static ReceiverSerial* receiver; //!< alias of `this` to be used in interrupt service routine
+    static ReceiverSerial* self; //!< alias of `this` to be used in interrupt service routine
     stm32_rx_pins_t _pins {};
     const uint8_t _uartIndex;
     const uint8_t _dataBits;
     const uint8_t _stopBits;
     const uint8_t _parity;
     const uint32_t _baudrate;
-#if defined(FRAMEWORK_RPI_PICO)
+#if defined(FRAMEWORK_RPI_PICO) || defined(FRAMEWORK_ARDUINO_RPI_PICO)
     uart_inst_t* _uart {};
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     UART_HandleTypeDef _uart {};
+#elif defined(FRAMEWORK_TEST)
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    HardwareSerial _uart;
+#endif
 #endif
 
 #if defined(FRAMEWORK_USE_FREERTOS)
