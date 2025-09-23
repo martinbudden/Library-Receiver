@@ -58,7 +58,7 @@ public:
     IRAM_ATTR inline uint8_t getBroadcastChannel() const { return _peerData[BROADCAST_PEER].peer_info.channel; }
     IRAM_ATTR esp_err_t broadcastData(const uint8_t* data, size_t len) const {
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
-         return esp_now_send(_peerData[BROADCAST_PEER].peer_info.peer_addr, data, len); 
+         return esp_now_send(_peerData[BROADCAST_PEER].peer_info.peer_addr, data, len);
 #else
         (void)data; (void)len; return -1;
 #endif
