@@ -15,7 +15,7 @@ public:
     enum { SBUS_START_BYTE = 0x0F, SBUS_END_BYTE = 0x00 };
     enum { BAUD_RATE = 100000, FAST_BAUDRATE = 200000 };
     enum { DATA_BITS = 8, PARITY = PARITY_EVEN, STOP_BITS = 2 }; // 8E2
-    enum { TIME_NEEDED_PER_FRAME = 3000 };
+    enum { TIME_NEEDED_PER_FRAME_US = 3000 };
 public:
     ReceiverSBUS(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
     ReceiverSBUS(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);

@@ -13,7 +13,7 @@ public:
     enum { CHANNEL_COUNT = 18, SLOT_COUNT = 14 };
     enum { BAUD_RATE = 115200 };
     enum { DATA_BITS = 8, PARITY = PARITY_NONE, STOP_BITS = 1 }; // 8N1
-    enum { TIME_NEEDED_PER_FRAME = 3000 };
+    enum { TIME_NEEDED_PER_FRAME_US = 3000 };
     enum { MODEL_IA6, MODEL_IA6B };
     enum { SERIAL_RX_PACKET_LENGTH = 32, TELEMETRY_PACKET_LENGTH = 4 };
 public:

@@ -38,7 +38,7 @@ bool ReceiverSBUS::onDataReceived(uint8_t data)
 {
     const timeUs32_t timeNowUs = timeUs();
     enum { TIME_ALLOWANCE = 500 };
-    if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME + TIME_ALLOWANCE) {
+    if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME_US + TIME_ALLOWANCE) {
         _packetIndex = 0;
         ++_droppedPacketCount;
     }
