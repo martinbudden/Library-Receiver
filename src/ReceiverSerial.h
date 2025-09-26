@@ -55,7 +55,7 @@ public:
         uint8_t port;
         uint8_t pin;
     };
-    struct pins_t {
+    struct rx_pins_t {
         uint8_t rx;
         uint8_t tx;
     };

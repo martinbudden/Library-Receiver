@@ -7,7 +7,7 @@ ReceiverIBUS::ReceiverIBUS(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint3
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
 
-ReceiverIBUS::ReceiverIBUS(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
+ReceiverIBUS::ReceiverIBUS(const rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
     ReceiverIBUS(stm32_rx_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
 {
 }

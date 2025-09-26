@@ -7,7 +7,7 @@ ReceiverCRSF::ReceiverCRSF(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint3
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
 
-ReceiverCRSF::ReceiverCRSF(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
+ReceiverCRSF::ReceiverCRSF(const rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
     ReceiverCRSF(stm32_rx_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
 {
 }
@@ -123,7 +123,31 @@ bool ReceiverCRSF::unpackPacket()
         _packetIsEmpty = true;
         return false;
     }
+
     if (_packet.value.type == FRAMETYPE_RC_CHANNELS_PACKED) {
+#if false
+        union channels_u { 
+            std::array<uint8_t, MAX_PACKET_SIZE - 3> payload;
+            rc_channels_packed_t rc;
+        };
+        channels_u channels { .payload = _packet.value.payload };
+        _channels[0] = channels.rc.chan0;
+        _channels[1] = channels.rc.chan1;
+        _channels[2] = channels.rc.chan2;
+        _channels[3] = channels.rc.chan3;
+        _channels[4] = channels.rc.chan4;
+        _channels[5] = channels.rc.chan5;
+        _channels[6] = channels.rc.chan6;
+        _channels[7] = channels.rc.chan7;
+        _channels[8] = channels.rc.chan8;
+        _channels[9] = channels.rc.chan9;
+        _channels[10] = channels.rc.chan10;
+        _channels[11] = channels.rc.chan11;
+        _channels[12] = channels.rc.chan12;
+        _channels[13] = channels.rc.chan13;
+        _channels[14] = channels.rc.chan14;
+        _channels[15] = channels.rc.chan15;
+#else
         const rc_channels_packed_t* const rcChannels = reinterpret_cast<rc_channels_packed_t*>(&_packet.value.payload[0]); // NOLINT(cppcoreguidelines-init-variables)
         _channels[0] = rcChannels->chan0;
         _channels[1] = rcChannels->chan1;
@@ -141,7 +165,7 @@ bool ReceiverCRSF::unpackPacket()
         _channels[13] = rcChannels->chan13;
         _channels[14] = rcChannels->chan14;
         _channels[15] = rcChannels->chan15;
-
+#endif
         _packetIsEmpty = false;
         return true;
     }

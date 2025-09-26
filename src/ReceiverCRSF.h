@@ -99,7 +99,7 @@ public:
     };
 #pragma pack(pop)
 public:
-    ReceiverCRSF(const pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    ReceiverCRSF(const rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
     ReceiverCRSF(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
 private:
     // Receiver is not copyable or moveable

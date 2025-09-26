@@ -13,7 +13,7 @@ void tearDown()
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-magic-numbers)
 void test_receiver_ibus()
 {
-    static ReceiverIBUS receiver{ReceiverSerial::pins_t{}, 0, 0};
+    static ReceiverIBUS receiver{ReceiverSerial::rx_pins_t{}, 0, 0};
 
     receiver.setPacketEmpty();
     TEST_ASSERT_TRUE(receiver.isPacketEmpty());
