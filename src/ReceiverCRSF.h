@@ -9,7 +9,7 @@ CRSF receiver protocol'
 */
 class ReceiverCRSF : public ReceiverSerial {
 public:
-    enum { CHANNEL_COUNT = 16 };
+    static constexpr uint32_t CHANNEL_COUNT = 16;
     enum { BAUD_RATE = 416666, BAUD_RATE_UNOFFICIAL = 420000 };
     enum { DATA_BITS = 8, PARITY = PARITY_NONE, STOP_BITS = 1 }; // 8N1
     enum { TIME_NEEDED_PER_FRAME_US = 1750 };

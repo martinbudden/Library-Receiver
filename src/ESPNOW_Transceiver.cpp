@@ -5,8 +5,9 @@
 
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 #include <HardwareSerial.h>
-#include <cstring>
 #include <esp_wifi.h>
+#else
+#define IRAM_ATTR
 #endif
 
 // see https://github.com/espressif/esp-idf/blob/v5.3.1/components/esp_wifi/include/esp_now.h
@@ -26,7 +27,7 @@ IRAM_ATTR void ESPNOW_Transceiver::onDataSent(const uint8_t* macAddress, esp_now
 {
     (void)macAddress;
     // status can be ESP_NOW_SEND_SUCCESS or ESP_NOW_SEND_FAIL
-    transceiver->setSendStatus(status);
+    transceiver->_sendStatus = status;
 }
 
 /*!
@@ -36,8 +37,15 @@ This is an ISR in the high priority WiFi task, and so should not perform any len
 
 Parameter `len` is `int` rather than `size_t` to match `esp_now_recv_cb_t` callback signature.
 */
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW_ESPRESSIF32_6_11_0)
 IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len) // NOLINT(readability-convert-member-functions-to-static) false positive
 {
+#else
+IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const esp_now_recv_info* info, const uint8_t* data, int len) // NOLINT(readability-convert-member-functions-to-static) false positive
+{
+    //const uint8_t* macAddress = info->src_addr;
+    const uint8_t* macAddress = info->des_addr;
+#endif
     if (!transceiver->isPrimaryPeerMacAddressSet()) {
         // If data is received when the primary peer MAC address is not yet set, it means we are in the binding process
         // So if check this data is not a broadcast packet and is not from the secondary peer
@@ -49,12 +57,12 @@ IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, con
 }
 #endif
 
-IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress, uint8_t channel) :
+ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress, uint8_t channel) :
     _channel(channel)
 {
     transceiver = this;
     memcpy(&_myMacAddress[0], myMacAddress, ESP_NOW_ETH_ALEN);
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW) && defined(FRAMEWORK_USE_FREERTOS)
     _primaryDataReceivedQueue = xQueueCreateStatic(DATA_READY_QUEUE_LENGTH, sizeof(_primaryDataReceivedQueueItem), &_primaryDataReceivedQueueStorageArea[0], &_primaryDataReceivedQueueStatic);
     configASSERT(_primaryDataReceivedQueue);
     const UBaseType_t primaryMessageCount = uxQueueMessagesWaiting(_primaryDataReceivedQueue);
@@ -70,7 +78,7 @@ IRAM_ATTR ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress, ui
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 esp_err_t ESPNOW_Transceiver::init()
 {
-    esp_err_t err = esp_now_init();
+    esp_err_t err = esp_now_init(); // NOLINT(cppcoreguidelines-init-variables) false positive
     if (err != ESP_OK) {
         Serial.printf("!!!! esp_now_init failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
@@ -97,10 +105,10 @@ esp_err_t ESPNOW_Transceiver::init()
     return ESP_OK;
 }
 
-IRAM_ATTR esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, const uint8_t* primaryMacAddress)
+esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, const uint8_t* primaryMacAddress)
 {
     //Serial.printf("ESPNOW_Transceiver::init received data: %x, %d\r\n", received_data.bufferPtr, received_data.bufferSize);
-    const esp_err_t err = init();
+    const esp_err_t err = init(); // NOLINT(cppcoreguidelines-init-variables) false positive
     if (err != ESP_OK) {
         return err;
     }
@@ -119,7 +127,7 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, con
     return ESP_OK;
 }
 
-IRAM_ATTR esp_err_t ESPNOW_Transceiver::addBroadcastPeer(uint8_t channel)
+esp_err_t ESPNOW_Transceiver::addBroadcastPeer(uint8_t channel)
 {
     // set receivedDataPtr to nullptr so no broadcast data is copied
     _peerData[BROADCAST_PEER].receivedDataPtr = nullptr;
@@ -127,7 +135,7 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::addBroadcastPeer(uint8_t channel)
     _peerData[BROADCAST_PEER].peer_info.channel = channel;
     _peerData[BROADCAST_PEER].peer_info.encrypt = false;
 
-    const esp_err_t err = esp_now_add_peer(&_peerData[BROADCAST_PEER].peer_info);
+    const esp_err_t err = esp_now_add_peer(&_peerData[BROADCAST_PEER].peer_info); // NOLINT(cppcoreguidelines-init-variables) false positive
     if (err != ESP_OK) {
         Serial.printf("!!!! addBroadcastPeer esp_now_add_peer failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
@@ -140,7 +148,7 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::addBroadcastPeer(uint8_t channel)
     return err;
 }
 
-IRAM_ATTR esp_err_t ESPNOW_Transceiver::addSecondaryPeer(received_data_t& received_data, const uint8_t* macAddress)
+esp_err_t ESPNOW_Transceiver::addSecondaryPeer(received_data_t& received_data, const uint8_t* macAddress)
 {
     received_data.len = 0;
     _peerData[PEER_2].receivedDataPtr = &received_data;
@@ -150,7 +158,7 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::addSecondaryPeer(received_data_t& receiv
         memcpy(_peerData[PEER_2].peer_info.peer_addr, macAddress, ESP_NOW_ETH_ALEN);
     }
 
-    const esp_err_t err = esp_now_add_peer(&_peerData[PEER_2].peer_info);
+    const esp_err_t err = esp_now_add_peer(&_peerData[PEER_2].peer_info); // NOLINT(cppcoreguidelines-init-variables) false positive
     if (err != ESP_OK) {
         Serial.printf("!!!! addSecondaryPeer - esp_now_add_peer failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
@@ -243,7 +251,7 @@ IRAM_ATTR bool ESPNOW_Transceiver::copyReceivedDataToBuffer(const uint8_t* macAd
     return false;
 }
 
-IRAM_ATTR esp_err_t ESPNOW_Transceiver::sendData(const uint8_t* data, size_t len) const
+esp_err_t ESPNOW_Transceiver::sendData(const uint8_t* data, size_t len) const
 {
     //const uint8_t* ma = _transmitMacAddress;
     //Serial.printf("sendData MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n", ma[0], ma[1], ma[2], ma[3], ma[4], ma[5]);
@@ -257,7 +265,7 @@ IRAM_ATTR esp_err_t ESPNOW_Transceiver::sendData(const uint8_t* data, size_t len
     return err;
 }
 
-IRAM_ATTR esp_err_t ESPNOW_Transceiver::sendDataSecondary(const uint8_t* data, size_t len) const
+esp_err_t ESPNOW_Transceiver::sendDataSecondary(const uint8_t* data, size_t len) const
 {
     //const uint8_t* ma = _peerData[SECONDARY_PEER].peer_info.peer_addr;
     //Serial.printf("sendDataSecondary MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n", ma[0], ma[1], ma[2], ma[3], ma[4], ma[5]);

@@ -10,7 +10,8 @@ IBUS receiver protocol, used by Flysky receivers.
 */
 class ReceiverIBUS : public ReceiverSerial {
 public:
-    enum { CHANNEL_COUNT = 18, SLOT_COUNT = 14 };
+    static constexpr uint32_t CHANNEL_COUNT = 18;
+    enum { SLOT_COUNT = 14 };
     enum { BAUD_RATE = 115200 };
     enum { DATA_BITS = 8, PARITY = PARITY_NONE, STOP_BITS = 1 }; // 8N1
     enum { TIME_NEEDED_PER_FRAME_US = 3000 };

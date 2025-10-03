@@ -23,5 +23,5 @@ public:
 public: // for testing
     void setControls(const controls_t& controls) { _controls = controls; }
 private:
-    uint32_t _receivedPacketCount {0};
+    uint32_t _receivedPacketCount {};
 };

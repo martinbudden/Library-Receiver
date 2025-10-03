@@ -18,7 +18,7 @@ Initialize the transceiver.
 int ReceiverAtomJoyStick::init() // NOLINT(readability-convert-member-functions-to-static)
 {
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
-    const esp_err_t err = _transceiver.init(_received_data, nullptr);
+    const esp_err_t err = _transceiver.init(_received_data, nullptr); // NOLINT(cppcoreguidelines-init-variables)
     return err;
 #else
     return 0;

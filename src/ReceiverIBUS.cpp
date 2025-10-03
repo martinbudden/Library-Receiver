@@ -17,10 +17,10 @@ Maps channels in range [1000,2000] to floats in range [0,1] for throttle, [-1,1]
 */
 void ReceiverIBUS::getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const
 {
-    throttleStick = static_cast<float>(_channels[THROTTLE] - CHANNEL_RANGE) / CHANNEL_RANGE;
-    rollStick = static_cast<float>(_channels[ROLL] - CHANNEL_MIDDLE) / CHANNEL_RANGE;;
-    pitchStick = static_cast<float>(_channels[PITCH] - CHANNEL_MIDDLE) / CHANNEL_RANGE;;
-    yawStick = static_cast<float>(_channels[YAW] - CHANNEL_MIDDLE) / CHANNEL_RANGE;;
+    throttleStick = (static_cast<float>(_channels[THROTTLE]) - CHANNEL_RANGE_F) / CHANNEL_RANGE_F;
+    rollStick = (static_cast<float>(_channels[ROLL]) - CHANNEL_MIDDLE_F) / CHANNEL_RANGE_F;
+    pitchStick = (static_cast<float>(_channels[PITCH]) - CHANNEL_MIDDLE_F) / CHANNEL_RANGE_F;
+    yawStick = (static_cast<float>(_channels[YAW]) - CHANNEL_MIDDLE_F) / CHANNEL_RANGE_F;
 }
 
 uint16_t ReceiverIBUS::getChannelRaw(size_t index) const

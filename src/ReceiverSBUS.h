@@ -11,7 +11,7 @@ class ReceiverSBUS : public ReceiverSerial {
 public:
      // 16 11-bit channels (includes 4 main stick channels) and 2 flag channels
     enum { CHANNEL_11_BIT_COUNT = 16 };
-    enum { CHANNEL_COUNT = 18 };
+    static constexpr uint32_t CHANNEL_COUNT = 18;
     enum { SBUS_START_BYTE = 0x0F, SBUS_END_BYTE = 0x00 };
     enum { BAUD_RATE = 100000, FAST_BAUDRATE = 200000 };
     enum { DATA_BITS = 8, PARITY = PARITY_EVEN, STOP_BITS = 2 }; // 8E2

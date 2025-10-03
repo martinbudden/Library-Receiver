@@ -5,15 +5,17 @@
 #include <cstddef>
 #include <cstdint>
 
+struct esp_now_recv_info;
+
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 
+#include <esp_attr.h>
 #include <esp_now.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 
 #else
 
-#define IRAM_ATTR
 typedef int esp_err_t;
 enum {ESP_OK=0, ESP_FAIL=-1};
 enum esp_now_send_status_t {ESP_NOW_SEND_SUCCESS = 0, ESP_NOW_SEND_FAIL};
@@ -28,7 +30,7 @@ struct esp_now_peer_info_t {
     void *priv;
 };
 
-#endif // USE_ESP_NOW
+#endif // LIBRARY_RECEIVER_USE_ESPNOW
 
 class ESPNOW_Transceiver {
 public:
@@ -44,40 +46,44 @@ public:
         received_data_t* receivedDataPtr {nullptr};
     };
 public:
-    IRAM_ATTR explicit ESPNOW_Transceiver(const uint8_t* myMacAddress, uint8_t channel);
+    explicit ESPNOW_Transceiver(const uint8_t* myMacAddress, uint8_t channel);
     // !!NOTE: all references passed to init() and addSecondaryPeer() must be static or allocated, ie they must not be local variables on the stack
-    IRAM_ATTR esp_err_t init(received_data_t& received_data, const uint8_t* transmitMacAddress);
-    IRAM_ATTR esp_err_t addSecondaryPeer(received_data_t& received_data, const uint8_t* macAddress);
-    IRAM_ATTR inline const uint8_t* myMacAddress() const { return &_myMacAddress[0]; }
+    esp_err_t init(received_data_t& received_data, const uint8_t* transmitMacAddress);
+    esp_err_t addSecondaryPeer(received_data_t& received_data, const uint8_t* macAddress);
+    inline const uint8_t* myMacAddress() const { return &_myMacAddress[0]; }
     // sends data to the primary peer,
-    IRAM_ATTR esp_err_t sendData(const uint8_t* data, size_t len) const;
+    esp_err_t sendData(const uint8_t* data, size_t len) const;
     // sends data to the secondary peer,
-    IRAM_ATTR esp_err_t sendDataSecondary(const uint8_t* data, size_t len) const;
-    IRAM_ATTR bool isPrimaryPeerMacAddressSet() const;
-    IRAM_ATTR const uint8_t* getPrimaryPeerMacAddress() const { return _peerData[PRIMARY_PEER].peer_info.peer_addr; }
-    IRAM_ATTR inline uint8_t getBroadcastChannel() const { return _peerData[BROADCAST_PEER].peer_info.channel; }
-    IRAM_ATTR esp_err_t broadcastData(const uint8_t* data, size_t len) const {
+    esp_err_t sendDataSecondary(const uint8_t* data, size_t len) const;
+    bool isPrimaryPeerMacAddressSet() const;
+    const uint8_t* getPrimaryPeerMacAddress() const { return _peerData[PRIMARY_PEER].peer_info.peer_addr; }
+    inline uint8_t getBroadcastChannel() const { return _peerData[BROADCAST_PEER].peer_info.channel; }
+    esp_err_t broadcastData(const uint8_t* data, size_t len) const {
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
          return esp_now_send(_peerData[BROADCAST_PEER].peer_info.peer_addr, data, len);
 #else
         (void)data; (void)len; return -1;
 #endif
     }
-    IRAM_ATTR inline uint32_t getReceivedPacketCount() const { return _receivedPacketCount; }
-    IRAM_ATTR inline uint32_t getTickCountDelta() const { return _tickCountDelta; }
-    IRAM_ATTR inline uint32_t getTickCountDeltaAndReset() { const uint32_t tickCountDelta = _tickCountDelta; _tickCountDelta = 0; return tickCountDelta; }
+    inline uint32_t getReceivedPacketCount() const { return _receivedPacketCount; }
+    inline uint32_t getTickCountDelta() const { return _tickCountDelta; }
+    inline uint32_t getTickCountDeltaAndReset() { const uint32_t tickCountDelta = _tickCountDelta; _tickCountDelta = 0; return tickCountDelta; }
 private:
-    IRAM_ATTR esp_err_t init();
-    IRAM_ATTR esp_err_t addBroadcastPeer(uint8_t channel);
+    esp_err_t init();
+    esp_err_t addBroadcastPeer(uint8_t channel);
     // when data is received the copy function is called to copy the received data into the client's buffer
-    IRAM_ATTR bool copyReceivedDataToBuffer(const uint8_t* macAddress, const uint8_t* data, size_t len);
-    IRAM_ATTR bool macAddressIsBroadCastMacAddress(const uint8_t* macAddress) const;
-    IRAM_ATTR bool macAddressIsSecondaryPeerMacAddress(const uint8_t* macAddress) const;
-    IRAM_ATTR esp_err_t setPrimaryPeerMacAddress(const uint8_t* macAddress);
-    IRAM_ATTR inline void setSendStatus(esp_now_send_status_t status) { _sendStatus = status; }
+    bool copyReceivedDataToBuffer(const uint8_t* macAddress, const uint8_t* data, size_t len);
+    bool macAddressIsBroadCastMacAddress(const uint8_t* macAddress) const;
+    bool macAddressIsSecondaryPeerMacAddress(const uint8_t* macAddress) const;
+    esp_err_t setPrimaryPeerMacAddress(const uint8_t* macAddress);
 private:
-    IRAM_ATTR static void onDataSent(const uint8_t* macAddress, esp_now_send_status_t status);
-    IRAM_ATTR static void onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len); // len is int rather than size_t to match esp_now_recv_cb_t callback signature
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW_ESPRESSIF32_6_11_0)
+    static void onDataSent(const uint8_t* macAddress, esp_now_send_status_t status);
+    static void onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len); // len is int rather than size_t to match esp_now_recv_cb_t callback signature
+#else
+    static void onDataSent(const uint8_t* macAddress, esp_now_send_status_t status);
+    static void onDataReceived(const esp_now_recv_info* info, const uint8_t* data, int len); // len is int rather than size_t to match esp_now_recv_cb_t callback signature
+#endif
 private:
     static const std::array<uint8_t, ESP_NOW_ETH_ALEN> broadcastMacAddress;
     static ESPNOW_Transceiver* transceiver; // alias of `this` to be used in onDataSent and onDataReceived callback functions
@@ -106,19 +112,19 @@ private:
     StaticQueue_t _secondaryDataReceivedQueueStatic {};
     QueueHandle_t _secondaryDataReceivedQueue {};
 public:
-    IRAM_ATTR inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED() const { return xQueueReceive(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, portMAX_DELAY); }
-    IRAM_ATTR inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED(uint32_t ticksToWait) const { return xQueueReceive(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, ticksToWait); }
-    //IRAM_ATTR inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() const { xQueueSendFromISR(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, nullptr); }
-    IRAM_ATTR inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() const {
+    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED() const { return xQueueReceive(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, portMAX_DELAY); }
+    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED(uint32_t ticksToWait) const { return xQueueReceive(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, ticksToWait); }
+    //inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() const { xQueueSendFromISR(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, nullptr); }
+    inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() const {
         xQueueOverwriteFromISR(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, &_primaryDataReceivedQueueHigherPriorityTaskWoken);
         if (_primaryDataReceivedQueueHigherPriorityTaskWoken == pdTRUE) {
             portYIELD_FROM_ISR(); // or portEND_SWITCHING_ISR() depending on the port.
         }
     }
-    IRAM_ATTR inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED() const { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, portMAX_DELAY); }
-    IRAM_ATTR inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED(uint32_t ticksToWait) const { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, ticksToWait); }
-    //IRAM_ATTR inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() const { xQueueSendFromISR(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, nullptr); }
-    IRAM_ATTR inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() const {
+    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED() const { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, portMAX_DELAY); }
+    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED(uint32_t ticksToWait) const { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, ticksToWait); }
+    //inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() const { xQueueSendFromISR(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, nullptr); }
+    inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() const {
         xQueueSendFromISR(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, &_secondaryDataReceivedQueueHigherPriorityTaskWoken);
         if (_secondaryDataReceivedQueueHigherPriorityTaskWoken == pdTRUE) {
             portYIELD_FROM_ISR(); // or portEND_SWITCHING_ISR() depending on the port.

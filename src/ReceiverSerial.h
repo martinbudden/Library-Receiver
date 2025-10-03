@@ -82,9 +82,9 @@ public:
     void setPacketEmpty() { _packetIsEmpty = true; }
     size_t getPacketIndex() const { return _packetIndex; } // for testing
 protected:
-    uint32_t _packetIsEmpty {true};
-    uint32_t _receivedPacketCount {0};
-    int32_t _errorPacketCount {0};
+    bool _packetIsEmpty {true};
+    uint32_t _receivedPacketCount {};
+    int32_t _errorPacketCount {};
     size_t _packetIndex {};
     timeUs32_t _startTime {};
 private:

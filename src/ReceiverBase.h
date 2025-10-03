@@ -17,6 +17,10 @@ public:
     enum { STICK_COUNT = 4 };
     enum { MOTOR_ON_OFF_SWITCH = 0 };
     enum { CHANNEL_LOW =  1000, CHANNEL_HIGH = 2000, CHANNEL_MIDDLE = 1500, CHANNEL_RANGE = CHANNEL_HIGH - CHANNEL_LOW };
+    static constexpr float CHANNEL_LOW_F = 1000.0F;
+    static constexpr float CHANNEL_HIGH_F = 2000.0F;
+    static constexpr float CHANNEL_MIDDLE_F = 1500.0F;
+    static constexpr float CHANNEL_RANGE_F = 2000.0F;
     enum { // standardize receivers to use AETR (Ailerons, Elevator, Throttle, Rudder), ie ROLL, PITCH, THROTTLE, YAW
         ROLL,
         PITCH,
@@ -76,10 +80,10 @@ public:
     inline controls_t getControls() const { return _controls; }
     controls_pwm_t getControlsPWM() const {
         return controls_pwm_t {
-            .throttle = static_cast<uint16_t>((_controls.throttle * CHANNEL_RANGE) + CHANNEL_MIDDLE),
-            .roll = static_cast<uint16_t>((_controls.roll * CHANNEL_RANGE) + CHANNEL_MIDDLE),
-            .pitch = static_cast<uint16_t>((_controls.pitch * CHANNEL_RANGE) + CHANNEL_MIDDLE),
-            .yaw = static_cast<uint16_t>((_controls.yaw * CHANNEL_RANGE) + CHANNEL_MIDDLE)
+            .throttle = static_cast<uint16_t>((_controls.throttle * CHANNEL_RANGE_F) + CHANNEL_MIDDLE_F),
+            .roll = static_cast<uint16_t>((_controls.roll * CHANNEL_RANGE_F) + CHANNEL_MIDDLE_F),
+            .pitch = static_cast<uint16_t>((_controls.pitch * CHANNEL_RANGE_F) + CHANNEL_MIDDLE_F),
+            .yaw = static_cast<uint16_t>((_controls.yaw * CHANNEL_RANGE_F) + CHANNEL_MIDDLE_F)
         };
     }
 
@@ -87,8 +91,8 @@ public:
     uint32_t getAuxiliaryChannelCount() const { return _auxiliaryChannelCount; }
     uint16_t getAuxiliaryChannel(size_t index) const { return getChannelRaw(index + STICK_COUNT); }
 
-    inline uint32_t getSwitch(size_t index) const { return (_switches & (0b11U << (2*index))) >> (2*index); }
-    inline void setSwitch(size_t index, uint8_t value) { _switches &= ~(0b11U << (2*index)); _switches |= (value & 0b11U) << (2*index); }
+    inline uint32_t getSwitch(size_t index) const { return static_cast<uint32_t>((_switches & (0b11U << (2*index))) >> (2*index)); }
+    inline void setSwitch(size_t index, uint8_t value) { _switches &= static_cast<uint32_t>(~(0b11U << (2*index))); _switches |= static_cast<uint32_t>((value & 0b11U) << (2*index)); }
     inline uint32_t getSwitches() const { return _switches; }
 
     inline int32_t getDroppedPacketCountDelta() const { return _droppedPacketCountDelta; }
@@ -101,14 +105,14 @@ public:
 protected:
     int32_t _packetReceived {false}; // may be invalid packet
     int32_t _newPacketAvailable {false};
-    uint32_t _packetCount {0};
-    int32_t _droppedPacketCountDelta {0};
-    int32_t _droppedPacketCount {0};
-    int32_t _droppedPacketCountPrevious {0};
-    uint32_t _tickCountDelta {0};
-    uint32_t _switches {0}; // 16 2 or 3 positions switches, each using 2-bits
+    int32_t _packetCount {};
+    int32_t _droppedPacketCountDelta {};
+    int32_t _droppedPacketCount {};
+    int32_t _droppedPacketCountPrevious {};
+    uint32_t _tickCountDelta {};
+    uint32_t _switches {}; // 16 2 or 3 positions switches, each using 2-bits
     controls_t _controls {}; //!< the main 4 channels
-    uint32_t _auxiliaryChannelCount {0};
+    uint32_t _auxiliaryChannelCount {};
 };
 
 class ReceiverWatcher {
