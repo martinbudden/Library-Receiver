@@ -17,6 +17,7 @@ public:
 public:
     explicit RadioControllerBase(ReceiverBase& receiver) : _receiver(receiver) {}
     const ReceiverBase& getReceiver() const { return _receiver; }
+    ReceiverBase& getReceiver() { return _receiver; }
     uint32_t getTimeoutTicks() const { return _timeoutTicks; }
     void setTimeoutTicks(uint32_t timeoutTicks) { _timeoutTicks = timeoutTicks; }
 

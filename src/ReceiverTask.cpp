@@ -17,10 +17,10 @@
 #endif
 
 
-ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroseconds, ReceiverBase& receiver, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher) :
+ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroseconds, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher) :
     TaskBase(taskIntervalMicroseconds),
-    _receiver(receiver),
     _radioController(radioController),
+    _receiver(radioController.getReceiver()),
     _receiverWatcher(receiverWatcher)
 {
 }
