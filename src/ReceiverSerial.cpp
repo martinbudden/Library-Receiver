@@ -166,7 +166,11 @@ uint8_t ReceiverSerial::getByte()
     HAL_UART_Receive(&_uart, &data, sizeof(data), HAL_MAX_DELAY);
 #else
     // read from uart
+#if defined(FRAMEWORK_STM32_CUBE_F4)
     const uint8_t data = static_cast<uint8_t>(_uart.Instance->DR & 0xFF); // NOLINT(cppcoreguidelines-init-variables)
+#else
+    const uint8_t data = 0;
+#endif
 #endif
     return data;
 #elif defined(FRAMEWORK_TEST)
