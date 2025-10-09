@@ -31,6 +31,24 @@ void __not_in_flash_func(ReceiverSerial::dataReadyISR)() // NOLINT(bugprone-rese
         }
     }
 }
+#elif defined(FRAMEWORK_STM32_CUBE)
+// ISR called back when byte received on uart
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    ReceiverSerial::dataReadyISR(huart);
+}
+
+FAST_CODE void ReceiverSerial::dataReadyISR(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == self->_uart.Instance) {
+        if (self->onDataReceived(self->_rxByte)) {
+            // onDataReceived returns true once packet is complete
+            //!!self->SIGNAL_DATA_READY_FROM_ISR();
+        }
+        // Re-enable the interrupt for the next byte
+        HAL_UART_Receive_IT(&self->_uart, &self->_rxByte, 1);
+    }
+}
 #else
 FAST_CODE void ReceiverSerial::dataReadyISR()
 {
@@ -85,30 +103,107 @@ void ReceiverSerial::init()
 
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
 
-    // STM32 indices are 1-based
-    if (_uartIndex == 0) {
-        _uart.Instance = USART1;
-#if defined(USART2)
-    } else if (_uartIndex == 1) {
-        _uart.Instance = USART2;
+    enum {PA=0, PB=1, PC=2, PD=3, PE=4, PF=5, PG=6, PH=7};
+    if (_pins.rx.port == PA) {
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+    } else if (_pins.rx.port == PB) {
+#if defined(GPIOB)
+        __HAL_RCC_GPIOB_CLK_ENABLE();
 #endif
-#if defined(USART3)
-    } else if (_uartIndex == 2) {
-        _uart.Instance = USART3;
+    } else if (_pins.rx.port == PC) {
+#if defined(GPIOC)
+        __HAL_RCC_GPIOC_CLK_ENABLE();
 #endif
-#if defined(USART4)
-    } else if (_uartIndex == 3) {
-        _uart.Instance = USART4;
+    } else if (_pins.rx.port == PD) {
+#if defined(GPIOD)
+        __HAL_RCC_GPIOD_CLK_ENABLE();
 #endif
-#if defined(USART5)
-    } else if (_uartIndex == 4) {
-        _uart.Instance = USART5;
+    } else if (_pins.rx.port == PE) {
+#if defined(GPIOE)
+        __HAL_RCC_GPIOE_CLK_ENABLE();
 #endif
-#if defined(USART6)
-    } else if (_uartIndex == 5) {
-        _uart.Instance = USART6;
+    } else if (_pins.rx.port == PF) {
+#if defined(GPIOF)
+        __HAL_RCC_GPIOF_CLK_ENABLE();
+#endif
+    } else if (_pins.rx.port == PG) {
+#if defined(GPIOG)
+        __HAL_RCC_GPIOG_CLK_ENABLE();
+#endif
+    } else if (_pins.rx.port == PH) {
+#if defined(GPIOH)
+        __HAL_RCC_GPIOH_CLK_ENABLE();
 #endif
     }
+
+    uint32_t alternate {};
+    // STM32 indices are 1-based
+    if (_uartIndex == 0) {
+        __HAL_RCC_USART1_CLK_ENABLE();
+        _uart.Instance = USART1;
+#if !defined(FRAMEWORK_STM32_CUBE_F1)
+        alternate = GPIO_AF7_USART1;
+#endif
+    } else if (_uartIndex == 1) {
+#if defined(USART2)
+        __HAL_RCC_USART2_CLK_ENABLE();
+        _uart.Instance = USART2;
+#if !defined(FRAMEWORK_STM32_CUBE_F1)
+        alternate = GPIO_AF7_USART2;
+#endif
+#endif
+    } else if (_uartIndex == 2) {
+#if defined(USART3)
+        __HAL_RCC_USART3_CLK_ENABLE();
+        _uart.Instance = USART3;
+#if !defined(FRAMEWORK_STM32_CUBE_F1)
+        alternate = GPIO_AF7_USART3;
+#endif
+#endif
+    } else if (_uartIndex == 3) {
+#if defined(UART4)
+        __HAL_RCC_UART4_CLK_ENABLE();
+        _uart.Instance = UART4;
+#if defined(FRAMEWORK_STM32_CUBE_F3)
+        alternate = GPIO_AF5_UART4;
+#elif defined(FRAMEWORK_STM32_CUBE_F4)
+        alternate = GPIO_AF8_UART4;
+#endif
+#endif
+    } else if (_uartIndex == 4) {
+#if defined(UART5)
+        __HAL_RCC_UART5_CLK_ENABLE();
+        _uart.Instance = UART5;
+#if defined(FRAMEWORK_STM32_CUBE_F3)
+        alternate = GPIO_AF5_UART5;
+#elif defined(FRAMEWORK_STM32_CUBE_F4)
+        alternate = GPIO_AF8_UART5;
+#endif
+#endif
+    } else if (_uartIndex == 5) {
+#if defined(USART6)
+        __HAL_RCC_USART6_CLK_ENABLE();
+        _uart.Instance = USART6;
+#if !defined(FRAMEWORK_STM32_CUBE_F1)
+        alternate = GPIO_AF8_USART6;
+#endif
+#endif
+    }
+
+    // Initialize RX/TX pins
+    GPIO_InitTypeDef GPIO_InitStruct {};
+    GPIO_InitStruct.Pin = gpioPin(_pins.rx.pin) | gpioPin(_pins.tx.pin);
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP; // Set as Alternate Function
+    GPIO_InitStruct.Pull = GPIO_NOPULL; // or GPIO_PULLUP for open-drain lines
+#if defined(FRAMEWORK_STM32_CUBE_F3)
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = alternate;
+#elif defined(FRAMEWORK_STM32_CUBE_F4)
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = alternate;
+#endif
+    HAL_GPIO_Init(gpioPort(_pins.rx.port), &GPIO_InitStruct);
+
     _uart.Init.BaudRate = _baudrate;
     _uart.Init.WordLength = UART_WORDLENGTH_8B;
     _uart.Init.StopBits = UART_STOPBITS_1;
@@ -116,6 +211,18 @@ void ReceiverSerial::init()
     _uart.Init.Mode = UART_MODE_TX_RX;
     _uart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
     _uart.Init.OverSampling = UART_OVERSAMPLING_16;
+#if defined(FRAMEWORK_STM32_CUBE_F3)
+    // pin inversion on STM32_F3
+    _uart.AdvancedInit.AdvFeatureInit |= UART_ADVFEATURE_RXINVERT_INIT;
+    _uart.AdvancedInit.RxPinLevelInvert = UART_ADVFEATURE_RXINV_ENABLE;
+    _uart.AdvancedInit.AdvFeatureInit |= UART_ADVFEATURE_TXINVERT_INIT;
+    _uart.AdvancedInit.TxPinLevelInvert = UART_ADVFEATURE_TXINV_ENABLE;
+#endif
+    HAL_UART_Init(&_uart);
+
+    // Enable UART interrupt, calls back HAL_UART_RxCpltCallback when data received
+    HAL_UART_Receive_IT(&_uart, &_rxByte, 1);
+
 
 #elif defined(FRAMEWORK_TEST)
 
@@ -132,7 +239,8 @@ This waits for data from the serial UART
 */
 int32_t ReceiverSerial::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
 {
-    return WAIT_DATA_READY(ticksToWait);
+    (void)ticksToWait;
+    return 0; //!!WAIT_DATA_READY(ticksToWait);
 }
 
 bool ReceiverSerial::isDataAvailable() const
@@ -154,6 +262,9 @@ bool ReceiverSerial::isDataAvailable() const
 #endif
 }
 
+/*!
+Used to get received byte when using time-based scheduling.
+*/
 uint8_t ReceiverSerial::getByte()
 {
 #if defined(FRAMEWORK_RPI_PICO) || defined(FRAMEWORK_ARDUINO_RPI_PICO)

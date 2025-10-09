@@ -50,6 +50,7 @@
 
 class ReceiverSerial : public ReceiverBase {
 public:
+    enum uart_index_e : uint8_t { UART_INDEX_0, UART_INDEX_1, UART_INDEX_2, UART_INDEX_3, UART_INDEX_4, UART_INDEX_5, UART_INDEX_6, UART_INDEX_7 };
     enum { PARITY_NONE, PARITY_EVEN, PARITY_ODD };
     struct port_pin_t {
         uint8_t port;
@@ -77,7 +78,10 @@ public:
     virtual bool isDataAvailable() const override;
     virtual uint8_t getByte() override;
     virtual bool update(uint32_t tickCountDelta) override;
-    FAST_CODE static void dataReadyISR();
+    static void dataReadyISR();
+#if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
+    static void dataReadyISR(UART_HandleTypeDef *huart);
+#endif
     bool isPacketEmpty() const { return _packetIsEmpty; }
     void setPacketEmpty() { _packetIsEmpty = true; }
     size_t getPacketIndex() const { return _packetIndex; } // for testing
@@ -123,6 +127,8 @@ public:
 public:
     inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return mutex_enter_timeout_ms(&_dataReadyMutex, ticksToWait); } // returns true if mutex owned, false if timeout
     inline void SIGNAL_DATA_READY_FROM_ISR() const { mutex_exit(&_dataReadyMutex); }
+#elif defined(FRAMEWORK_STM32_CUBE)
+    uint8_t _rxByte;
 #else
 public:
     inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { (void)ticksToWait; return 0; }
