@@ -7,6 +7,7 @@
 #include <cstring>
 
 #if defined(FRAMEWORK_USE_FREERTOS)
+
 #if defined(FRAMEWORK_ESPIDF) || defined(FRAMEWORK_ARDUINO_ESP32)
 #include <freertos/FreeRTOS.h>
 #include <freertos/FreeRTOSConfig.h>
@@ -19,7 +20,8 @@
 #include <FreeRTOSConfig.h>
 #include <task.h>
 #endif
-#endif
+
+#endif // FRAMEWORK_USE_FREERTOS
 
 
 ReceiverTask* ReceiverTask::createTask(RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core)

@@ -43,7 +43,7 @@ FAST_CODE void ReceiverSerial::dataReadyISR(const UART_HandleTypeDef *huart) // 
     if (huart->Instance == self->_uart.Instance) {
         if (self->onDataReceived(self->_rxByte)) {
             // onDataReceived returns true once packet is complete
-            //!!self->SIGNAL_DATA_READY_FROM_ISR();
+            self->SIGNAL_DATA_READY_FROM_ISR();
         }
         // Re-enable the interrupt for the next byte
         HAL_UART_Receive_IT(&self->_uart, &self->_rxByte, 1);
@@ -251,8 +251,7 @@ This waits for data from the serial UART
 */
 int32_t ReceiverSerial::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
 {
-    (void)ticksToWait;
-    return 0; //!!WAIT_DATA_READY(ticksToWait);
+    return WAIT_DATA_READY(ticksToWait);
 }
 
 bool ReceiverSerial::isDataAvailable() const

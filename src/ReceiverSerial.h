@@ -5,17 +5,19 @@
 #include <array>
 
 #if defined(FRAMEWORK_USE_FREERTOS)
+
 #if defined(FRAMEWORK_ESPIDF) || defined(FRAMEWORK_ARDUINO_ESP32)
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 #else
-#if defined(FRAMEWORK_ARDUINO_STM32)
+#if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
 #include <STM32FreeRTOS.h>
 #endif
 #include <FreeRTOS.h>
 #include <queue.h>
 #endif
-#endif
+
+#endif // FRAMEWORK_USE_FREERTOS
 
 #if defined(FRAMEWORK_RPI_PICO)
 #include <hardware/uart.h>
@@ -112,6 +114,7 @@ private:
     uart_inst_t* _uart {};
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     UART_HandleTypeDef _uart {};
+    uint8_t _rxByte {};
 #elif defined(FRAMEWORK_TEST)
 #else // defaults to FRAMEWORK_ARDUINO
 #if defined(FRAMEWORK_ARDUINO_ESP32)
@@ -136,8 +139,6 @@ public:
 public:
     inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return mutex_enter_timeout_ms(&_dataReadyMutex, ticksToWait); } // returns true if mutex owned, false if timeout
     inline void SIGNAL_DATA_READY_FROM_ISR() const { mutex_exit(&_dataReadyMutex); }
-#elif defined(FRAMEWORK_STM32_CUBE)
-    uint8_t _rxByte {};
 #else
 public:
     inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { (void)ticksToWait; return 0; }
