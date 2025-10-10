@@ -10,7 +10,7 @@ void tearDown()
 {
 }
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-magic-numbers)
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-convert-member-functions-to-static,readability-magic-numbers)
 void test_receiver_ibus()
 {
     static ReceiverIBUS receiver{ReceiverSerial::rx_pins_t{}, 0, 0};
@@ -66,7 +66,7 @@ void test_receiver_ibus()
     TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelRaw(13));
  }
 
-// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-magic-numbers)
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-convert-member-functions-to-static,readability-magic-numbers)
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {

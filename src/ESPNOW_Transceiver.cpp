@@ -23,7 +23,7 @@ ESPNOW_Transceiver* ESPNOW_Transceiver::transceiver;
 /*!
 Callback when data is sent.
 */
-IRAM_ATTR void ESPNOW_Transceiver::onDataSent(const uint8_t* macAddress, esp_now_send_status_t status) // NOLINT(readability-convert-member-functions-to-static) false positive
+IRAM_ATTR void ESPNOW_Transceiver::onDataSent(const uint8_t* macAddress, esp_now_send_status_t status)
 {
     (void)macAddress;
     // status can be ESP_NOW_SEND_SUCCESS or ESP_NOW_SEND_FAIL
@@ -38,10 +38,10 @@ This is an ISR in the high priority WiFi task, and so should not perform any len
 Parameter `len` is `int` rather than `size_t` to match `esp_now_recv_cb_t` callback signature.
 */
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW_ESPRESSIF32_6_11_0)
-IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len) // NOLINT(readability-convert-member-functions-to-static) false positive
+IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len)
 {
 #else
-IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const esp_now_recv_info* info, const uint8_t* data, int len) // NOLINT(readability-convert-member-functions-to-static) false positive
+IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const esp_now_recv_info* info, const uint8_t* data, int len)
 {
     //const uint8_t* macAddress = info->src_addr;
     const uint8_t* macAddress = info->des_addr;
@@ -78,7 +78,7 @@ ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress, uint8_t chan
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 esp_err_t ESPNOW_Transceiver::init()
 {
-    esp_err_t err = esp_now_init(); // NOLINT(cppcoreguidelines-init-variables) false positive
+    esp_err_t err = esp_now_init();
     if (err != ESP_OK) {
         Serial.printf("!!!! esp_now_init failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
@@ -108,7 +108,7 @@ esp_err_t ESPNOW_Transceiver::init()
 esp_err_t ESPNOW_Transceiver::init(received_data_t& received_data, const uint8_t* primaryMacAddress)
 {
     //Serial.printf("ESPNOW_Transceiver::init received data: %x, %d\r\n", received_data.bufferPtr, received_data.bufferSize);
-    const esp_err_t err = init(); // NOLINT(cppcoreguidelines-init-variables) false positive
+    const esp_err_t err = init();
     if (err != ESP_OK) {
         return err;
     }
@@ -135,7 +135,7 @@ esp_err_t ESPNOW_Transceiver::addBroadcastPeer(uint8_t channel)
     _peerData[BROADCAST_PEER].peer_info.channel = channel;
     _peerData[BROADCAST_PEER].peer_info.encrypt = false;
 
-    const esp_err_t err = esp_now_add_peer(&_peerData[BROADCAST_PEER].peer_info); // NOLINT(cppcoreguidelines-init-variables) false positive
+    const esp_err_t err = esp_now_add_peer(&_peerData[BROADCAST_PEER].peer_info);
     if (err != ESP_OK) {
         Serial.printf("!!!! addBroadcastPeer esp_now_add_peer failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;
@@ -158,7 +158,7 @@ esp_err_t ESPNOW_Transceiver::addSecondaryPeer(received_data_t& received_data, c
         memcpy(_peerData[PEER_2].peer_info.peer_addr, macAddress, ESP_NOW_ETH_ALEN);
     }
 
-    const esp_err_t err = esp_now_add_peer(&_peerData[PEER_2].peer_info); // NOLINT(cppcoreguidelines-init-variables) false positive
+    const esp_err_t err = esp_now_add_peer(&_peerData[PEER_2].peer_info);
     if (err != ESP_OK) {
         Serial.printf("!!!! addSecondaryPeer - esp_now_add_peer failed: 0x%X (0x%X)\r\n\r\n", err, err - ESP_ERR_ESPNOW_BASE);
         return err;

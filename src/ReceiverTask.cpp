@@ -32,7 +32,7 @@ void ReceiverTask::loop()
 {
     // calculate _tickCountDelta to get actual deltaT value, since we may have been delayed for more than taskIntervalTicks
 #if defined(FRAMEWORK_USE_FREERTOS)
-    const TickType_t tickCount = xTaskGetTickCount(); // NOLINT(cppcoreguidelines-init-variables) false positive
+    const TickType_t tickCount = xTaskGetTickCount();
 #else
     const uint32_t tickCount = timeMs();
 #endif
@@ -57,7 +57,7 @@ void ReceiverTask::loop()
 /*!
 Task function for the ReceiverTask. Sets up and runs the task loop() function.
 */
-[[noreturn]] void ReceiverTask::task() // NOLINT(readability-convert-member-functions-to-static)
+[[noreturn]] void ReceiverTask::task()
 {
 #if defined(FRAMEWORK_USE_FREERTOS)
 
@@ -101,7 +101,7 @@ Wrapper function for ReceiverTask::Task with the correct signature to be used in
 */
 [[noreturn]] void ReceiverTask::Task(void* arg)
 {
-    const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg); // NOLINT(cppcoreguidelines-init-variables) false positive
+    const TaskBase::parameters_t* parameters = static_cast<TaskBase::parameters_t*>(arg);
 
     static_cast<ReceiverTask*>(parameters->task)->task(); // NOLINT(cppcoreguidelines-pro-type-static-cast-downcast}
 }

@@ -18,7 +18,7 @@ public:
     [[noreturn]] static void Task(void* arg);
     void loop();
 private:
-    [[noreturn]] void task();
+    [[noreturn]] static void task();
 private:
     RadioControllerBase& _radioController;
     ReceiverBase& _receiver;

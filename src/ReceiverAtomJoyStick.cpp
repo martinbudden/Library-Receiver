@@ -15,10 +15,10 @@ ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress, uint8_t ch
 /*!
 Initialize the transceiver.
 */
-int ReceiverAtomJoyStick::init() // NOLINT(readability-convert-member-functions-to-static)
+int ReceiverAtomJoyStick::init()
 {
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
-    const esp_err_t err = _transceiver.init(_received_data, nullptr); // NOLINT(cppcoreguidelines-init-variables)
+    const esp_err_t err = _transceiver.init(_received_data, nullptr);
     return err;
 #else
     return 0;
@@ -131,7 +131,7 @@ uint16_t ReceiverAtomJoyStick::getChannelRaw(size_t index) const
     return getSwitch(index - STICK_COUNT) ? CHANNEL_HIGH : CHANNEL_LOW;
 }
 
-esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const // NOLINT(readability-convert-member-functions-to-static)
+esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const
 {
     // peer command as used by the StampFlyController, see: https://github.com/m5stack/Atom-JoyStick/blob/main/examples/StampFlyController/src/main.cpp#L117
     static const std::array<uint8_t, 4> peerCommand { 0xaa, 0x55, 0x16, 0x88 };
@@ -144,7 +144,7 @@ esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCou
     memcpy(&data[1 + ESP_NOW_ETH_ALEN], &peerCommand[0], sizeof(peerCommand));
 
     for (int ii = 0; ii < broadcastCount; ++ii) {
-        const esp_err_t err = _transceiver.broadcastData(&data[0], sizeof(data)); // NOLINT(cppcoreguidelines-init-variables) false positive
+        const esp_err_t err = _transceiver.broadcastData(&data[0], sizeof(data));
         //  cppcheck-suppress knownConditionTrueFalse
         if (err != ESP_OK) {
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
@@ -180,7 +180,7 @@ int32_t ReceiverAtomJoyStick::ubyte4float_to_Q12dot4(const uint8_t f[4]) // NOLI
     const uint8_t sign     = static_cast<uint8_t>((n.i >> 31U) & 0x1U); // 0x1000 0000 // NOLINT(cppcoreguidelines-pro-type-union-access,hicpp-use-auto,modernize-use-auto)
     const uint32_t mantissa = (n.i & 0x7FFFFFU) | 0x800000U; // 0x007F FFFF, OR in implicit bit NOLINT(cppcoreguidelines-pro-type-union-access)
 
-    const int32_t i = static_cast<int32_t>(mantissa >> ((22U-11U) - (exponent - 0x80U))); // -Wshift-count-overflow NOLINT(hicpp-use-auto,modernize-use-auto)
+    const auto i = static_cast<int32_t>(mantissa >> ((22U-11U) - (exponent - 0x80U))); // -Wshift-count-overflow
     return sign ? -i : i;
 }
 
@@ -212,7 +212,7 @@ bool ReceiverAtomJoyStick::unpackPacket(checkPacket_t checkPacket)
             return false;
         }
 //NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
-        const uint8_t* macAddress = _transceiver.myMacAddress(); // NOLINT(cppcoreguidelines-init-variables) false positive
+        const uint8_t* macAddress = _transceiver.myMacAddress();
         if (_packet[0] != macAddress[3] || _packet[1] != macAddress[4] || _packet[2] != macAddress[5]) { // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
             //Serial.printf("packet: %02X:%02X:%02X\r\n", _packet[0], _packet[1], _packet[2]);
             //Serial.printf("my:     %02X:%02X:%02X\r\n", macAddress[3], macAddress[4], macAddress[5]);

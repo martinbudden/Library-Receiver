@@ -10,7 +10,7 @@ void tearDown()
 {
 }
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-magic-numbers)
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-convert-member-functions-to-static,readability-magic-numbers)
 void test_receiver_sbus()
 {
     static ReceiverSBUS receiver{ReceiverSerial::rx_pins_t{}, 0, 0};
@@ -19,7 +19,7 @@ void test_receiver_sbus()
     TEST_ASSERT_TRUE(receiver.isPacketEmpty());
 }
 
-// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-magic-numbers)
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-convert-member-functions-to-static,readability-magic-numbers)
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char **argv)
 {

@@ -18,7 +18,7 @@ union fi { // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,cppcoreguidelines-pro-type-union-access,hicpp-use-auto,modernize-use-auto)
 void test_float()
 {
-    fi v {}; // NOLINT(cppcoreguidelines-init-variables) false positive
+    fi v {};
     uint32_t mantissa = 0;
     uint32_t exponent = 0;
 

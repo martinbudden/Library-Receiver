@@ -27,18 +27,18 @@ ReceiverTask* ReceiverTask::createTask(RadioControllerBase& radioController, Rec
     return createTask(radioController, receiverWatcher, priority, core, 0);
 }
 
-ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core) // NOLINT(readability-convert-member-functions-to-static)
+ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core)
 {
     return createTask(taskInfo, radioController, receiverWatcher, priority, core, 0);
 }
 
 ReceiverTask* ReceiverTask::createTask(RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds)
 {
-    task_info_t taskInfo {}; // NOLINT(cppcoreguidelines-init-variables) false positive
+    task_info_t taskInfo {};
     return createTask(taskInfo, radioController, receiverWatcher, priority, core, taskIntervalMicroseconds);
 }
 
-ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds) // NOLINT(readability-convert-member-functions-to-static)
+ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds)
 {
     static ReceiverTask receiverTask(taskIntervalMicroseconds, radioController, receiverWatcher);
 
