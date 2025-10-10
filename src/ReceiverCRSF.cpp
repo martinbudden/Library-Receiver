@@ -2,7 +2,7 @@
 
 
 ReceiverCRSF::ReceiverCRSF(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverSerial(pins, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
+    ReceiverSerial(uart_pins_t{{pins.tx.port,pins.tx.pin,false},{pins.rx.port,pins.rx.pin,false}}, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
 {
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
@@ -97,9 +97,9 @@ uint8_t ReceiverCRSF::calculateCRC(uint8_t crc, uint8_t value)
     return crc;
 }
 
-uint8_t ReceiverCRSF::calculateCRC() const // NOLINT(readability-convert-member-functions-to-static)
+uint8_t ReceiverCRSF::calculateCRC() const
 {
-    uint8_t crc = calculateCRC(0, _packet.value.type); // NOLINT(cppcoreguidelines-init-variables) false positive
+    uint8_t crc = calculateCRC(0, _packet.value.type);
     for (int32_t ii = 0; ii < _packet.value.length - 2; ++ii) { // length is length of type, payload, and CRC
         crc = calculateCRC(crc, _packet.value.payload[ii]);
     }
@@ -148,7 +148,7 @@ bool ReceiverCRSF::unpackPacket()
         _channels[14] = channels.rc.chan14;
         _channels[15] = channels.rc.chan15;
 #else
-        const rc_channels_packed_t* const rcChannels = reinterpret_cast<rc_channels_packed_t*>(&_packet.value.payload[0]); // NOLINT(cppcoreguidelines-init-variables)
+        const rc_channels_packed_t* const rcChannels = reinterpret_cast<rc_channels_packed_t*>(&_packet.value.payload[0]);
         _channels[0] = rcChannels->chan0;
         _channels[1] = rcChannels->chan1;
         _channels[2] = rcChannels->chan2;

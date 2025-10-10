@@ -2,7 +2,7 @@
 
 
 ReceiverSBUS::ReceiverSBUS(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverSerial(pins, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
+    ReceiverSerial(uart_pins_t{{pins.tx.port,pins.tx.pin,false},{pins.rx.port,pins.rx.pin,false}}, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
 {
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
@@ -125,7 +125,7 @@ bool ReceiverSBUS::unpackPacket()
 #endif
 
     enum { FLAG_CHANNEL_16 = 0x01, FLAG_CHANNEL_17 = 0x02, FLAG_LOST_FRAME = 0x04, FLAG_LOST_SIGNAL = 0x08 };
-    const uint8_t flags = _packet[23]; // NOLINT(cppcoreguidelines-init-variables) false positive
+    const uint8_t flags = _packet[23];
     _channels[16] = (flags & FLAG_CHANNEL_16) ? CHANNEL_HIGH : CHANNEL_LOW;
     _channels[17] = (flags & FLAG_CHANNEL_17) ? CHANNEL_HIGH : CHANNEL_LOW;
 

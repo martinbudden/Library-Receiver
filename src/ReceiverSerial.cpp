@@ -24,7 +24,7 @@ void __not_in_flash_func(ReceiverSerial::dataReadyISR)() // NOLINT(bugprone-rese
     //gpio_put(PICO_DEFAULT_LED_PIN, 1);
     while (uart_is_readable(self->_uart)) {
         // Read 1 byte from UART buffer and give it to the RX protocol parser
-        const uint8_t data = uart_getc(self->_uart); // NOLINT(cppcoreguidelines-init-variables) false positive
+        const uint8_t data = uart_getc(self->_uart);
         if (self->onDataReceived(data)) {
             // onDataReceived returns true once packet is complete
             self->SIGNAL_DATA_READY_FROM_ISR();
@@ -33,12 +33,12 @@ void __not_in_flash_func(ReceiverSerial::dataReadyISR)() // NOLINT(bugprone-rese
 }
 #elif defined(FRAMEWORK_STM32_CUBE)
 // ISR called back when byte received on uart
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) // cppcheck-suppress constParameterPointer
 {
     ReceiverSerial::dataReadyISR(huart);
 }
 
-FAST_CODE void ReceiverSerial::dataReadyISR(UART_HandleTypeDef *huart)
+FAST_CODE void ReceiverSerial::dataReadyISR(const UART_HandleTypeDef *huart) // NOLINT(readability-convert-member-functions-to-static)
 {
     if (huart->Instance == self->_uart.Instance) {
         if (self->onDataReceived(self->_rxByte)) {
@@ -56,8 +56,14 @@ FAST_CODE void ReceiverSerial::dataReadyISR()
 }
 #endif
 
-ReceiverSerial::ReceiverSerial(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) : // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    _pins(pins),
+/*!
+Negative pin means it is inverted.
+*/
+ReceiverSerial::ReceiverSerial(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) : // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+    _pins({
+        .rx = { .port = pins.rx.port, .pin = static_cast<int8_t>(pins.rx.pin < 0 ? -pins.rx.pin : pins.rx.pin), .inverted = pins.rx.pin < 0 },
+        .tx = { .port = pins.tx.port, .pin = static_cast<int8_t>(pins.tx.pin < 0 ? -pins.tx.pin : pins.tx.pin), .inverted = pins.tx.pin < 0 }
+    }),
     _uartIndex(uartIndex),
     _dataBits(dataBits),
     _stopBits(stopBits),
@@ -84,7 +90,7 @@ void ReceiverSerial::init()
     enum { NO_CTS = false, NO_RTS = false };
     uart_set_hw_flow(_uart, NO_CTS, NO_RTS);
 
-    const uart_parity_t parity =  // NOLINT(cppcoreguidelines-init-variables) false positive
+    const uart_parity_t parity =
         (_parity == PARITY_NONE) ? UART_PARITY_NONE :
         (_parity == PARITY_EVEN) ? UART_PARITY_EVEN : UART_PARITY_ODD;
     uart_set_format(_uart, _dataBits, _stopBits, parity);
@@ -92,7 +98,7 @@ void ReceiverSerial::init()
     uart_set_fifo_enabled(_uart, true);
 
     // Enable UART interrupt
-    const irq_num_t irqNum = _uartIndex == 0 ? UART0_IRQ : UART1_IRQ; // NOLINT*cppcoreguidelines-init-variables) false positive
+    const irq_num_t irqNum = _uartIndex == 0 ? UART0_IRQ : UART1_IRQ;
     irq_set_exclusive_handler(irqNum, dataReadyISR);
     irq_set_enabled(irqNum, true);
     enum { RX_NEEDS_DATA = true, RX_DOES_NOT_NEED_DATA = false };
@@ -136,7 +142,9 @@ void ReceiverSerial::init()
 #endif
     }
 
-    uint32_t alternate {};
+#if !defined(FRAMEWORK_STM32_CUBE_F1)
+    uint32_t alternate {}; // NOLINT(misc-const-correctness)
+#endif
     // STM32 indices are 1-based
     if (_uartIndex == 0) {
         __HAL_RCC_USART1_CLK_ENABLE();
@@ -180,7 +188,7 @@ void ReceiverSerial::init()
         alternate = GPIO_AF8_UART5;
 #endif
 #endif
-    } else if (_uartIndex == 5) {
+    } else if (_uartIndex == 5) { // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 #if defined(USART6)
         __HAL_RCC_USART6_CLK_ENABLE();
         _uart.Instance = USART6;
@@ -191,7 +199,7 @@ void ReceiverSerial::init()
     }
 
     // Initialize RX/TX pins
-    GPIO_InitTypeDef GPIO_InitStruct {};
+    GPIO_InitTypeDef GPIO_InitStruct = {};
     GPIO_InitStruct.Pin = gpioPin(_pins.rx.pin) | gpioPin(_pins.tx.pin);
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP; // Set as Alternate Function
     GPIO_InitStruct.Pull = GPIO_NOPULL; // or GPIO_PULLUP for open-drain lines
@@ -213,10 +221,14 @@ void ReceiverSerial::init()
     _uart.Init.OverSampling = UART_OVERSAMPLING_16;
 #if defined(FRAMEWORK_STM32_CUBE_F3)
     // pin inversion on STM32_F3
-    _uart.AdvancedInit.AdvFeatureInit |= UART_ADVFEATURE_RXINVERT_INIT;
-    _uart.AdvancedInit.RxPinLevelInvert = UART_ADVFEATURE_RXINV_ENABLE;
-    _uart.AdvancedInit.AdvFeatureInit |= UART_ADVFEATURE_TXINVERT_INIT;
-    _uart.AdvancedInit.TxPinLevelInvert = UART_ADVFEATURE_TXINV_ENABLE;
+    if (_pins.rx.inverted) {
+        _uart.AdvancedInit.AdvFeatureInit |= UART_ADVFEATURE_RXINVERT_INIT;
+        _uart.AdvancedInit.RxPinLevelInvert = UART_ADVFEATURE_RXINV_ENABLE;
+    }
+    if (_pins.tx.inverted) {
+        _uart.AdvancedInit.AdvFeatureInit |= UART_ADVFEATURE_TXINVERT_INIT;
+        _uart.AdvancedInit.TxPinLevelInvert = UART_ADVFEATURE_TXINV_ENABLE;
+    }
 #endif
     HAL_UART_Init(&_uart);
 
@@ -228,7 +240,7 @@ void ReceiverSerial::init()
 
 #else // defaults to FRAMEWORK_ARDUINO
 #if defined(FRAMEWORK_ARDUINO_ESP32)
-    const uint32_t config = (_parity == PARITY_NONE) ? SERIAL_8N1 : (_parity == PARITY_EVEN) ? SERIAL_8E1 : SERIAL_8O1; // NOLINT(cppcoreguidelines-init-variables)
+    const uint32_t config = (_parity == PARITY_NONE) ? SERIAL_8N1 : (_parity == PARITY_EVEN) ? SERIAL_8E1 : SERIAL_8O1;
     _uart.begin(_baudrate, config, _pins.rx.pin, _pins.tx.pin);
 #endif
 #endif
@@ -278,7 +290,7 @@ uint8_t ReceiverSerial::getByte()
 #else
     // read from uart
 #if defined(FRAMEWORK_STM32_CUBE_F4)
-    const uint8_t data = static_cast<uint8_t>(_uart.Instance->DR & 0xFF); // NOLINT(cppcoreguidelines-init-variables)
+    const uint8_t data = static_cast<uint8_t>(_uart.Instance->DR & 0xFF);
 #else
     const uint8_t data = 0;
 #endif

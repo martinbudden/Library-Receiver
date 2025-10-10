@@ -53,19 +53,28 @@ public:
     enum uart_index_e : uint8_t { UART_INDEX_0, UART_INDEX_1, UART_INDEX_2, UART_INDEX_3, UART_INDEX_4, UART_INDEX_5, UART_INDEX_6, UART_INDEX_7 };
     enum { PARITY_NONE, PARITY_EVEN, PARITY_ODD };
     struct port_pin_t {
-        uint8_t port;
-        uint8_t pin;
+        int8_t port;
+        int8_t pin;
     };
     struct rx_pins_t {
-        uint8_t rx;
-        uint8_t tx;
+        int8_t rx;
+        int8_t tx;
     };
     struct stm32_rx_pins_t {
         port_pin_t rx;
         port_pin_t tx;
     };
+    struct uart_pin_t {
+        int8_t port;
+        int8_t pin;
+        bool inverted;
+    };
+    struct uart_pins_t {
+        uart_pin_t rx;
+        uart_pin_t tx;
+    };
 public:
-    ReceiverSerial(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
+    ReceiverSerial(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
     void init();
 private:
     // Receiver is not copyable or moveable
@@ -80,7 +89,7 @@ public:
     virtual bool update(uint32_t tickCountDelta) override;
     static void dataReadyISR();
 #if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
-    static void dataReadyISR(UART_HandleTypeDef *huart);
+    static void dataReadyISR(const UART_HandleTypeDef *huart);
 #endif
     bool isPacketEmpty() const { return _packetIsEmpty; }
     void setPacketEmpty() { _packetIsEmpty = true; }
@@ -93,7 +102,7 @@ protected:
     timeUs32_t _startTime {};
 private:
     static ReceiverSerial* self; //!< alias of `this` to be used in interrupt service routine
-    stm32_rx_pins_t _pins {};
+    const uart_pins_t _pins {};
     const uint8_t _uartIndex;
     const uint8_t _dataBits;
     const uint8_t _stopBits;
@@ -128,7 +137,7 @@ public:
     inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return mutex_enter_timeout_ms(&_dataReadyMutex, ticksToWait); } // returns true if mutex owned, false if timeout
     inline void SIGNAL_DATA_READY_FROM_ISR() const { mutex_exit(&_dataReadyMutex); }
 #elif defined(FRAMEWORK_STM32_CUBE)
-    uint8_t _rxByte;
+    uint8_t _rxByte {};
 #else
 public:
     inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { (void)ticksToWait; return 0; }

@@ -2,7 +2,7 @@
 
 
 ReceiverIBUS::ReceiverIBUS(const stm32_rx_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverSerial(pins, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
+    ReceiverSerial(uart_pins_t{{pins.tx.port,pins.tx.pin,false},{pins.rx.port,pins.rx.pin,false}}, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
 {
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
@@ -96,7 +96,7 @@ bool ReceiverIBUS::unpackPacket()
         return false;
     }
 
-    size_t offset = _channelOffset; // NOLINT(cppcoreguidelines-init-variables) false positive
+    size_t offset = _channelOffset;
     for (size_t ii = 0; ii < SLOT_COUNT; ++ii) {
         _channels[ii] = _packet[offset] + ((_packet[offset + 1] & 0x0F) << 8U);
         offset += 2;
