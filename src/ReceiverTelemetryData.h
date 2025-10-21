@@ -6,6 +6,7 @@ Packet definitions of telemetry data useful to any Stabilized Vehicle.
 #include "ReceiverBase.h"
 #include <array>
 
+
 #pragma pack(push, 1)
 /*!
 Packet for the transmission of Receiver telemetry data.
