@@ -23,7 +23,6 @@ public:
 
     virtual void updateControls(const controls_t& controls) = 0;
     virtual void checkFailsafe(uint32_t tickCount) = 0;
-    virtual uint32_t getFailsafePhase() const = 0;
 protected:
     ReceiverBase& _receiver;
     uint32_t _timeoutTicks {100};
