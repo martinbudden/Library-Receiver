@@ -43,7 +43,7 @@ private:
     void resetSticks();
     void setDeadband(int32_t deadband);
     void setCurrentReadingsToBias();
-    float normalizedStick(int stickIndex) const;
+    float normalizedStick(size_t stickIndex) const;
 private:
     struct stick_t {
         int32_t rawQ12dot4 {0};

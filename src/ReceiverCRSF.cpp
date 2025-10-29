@@ -100,8 +100,8 @@ uint8_t ReceiverCRSF::calculateCRC(uint8_t crc, uint8_t value)
 uint8_t ReceiverCRSF::calculateCRC() const
 {
     uint8_t crc = calculateCRC(0, _packet.value.type);
-    for (int32_t ii = 0; ii < _packet.value.length - 2; ++ii) { // length is length of type, payload, and CRC
-        crc = calculateCRC(crc, _packet.value.payload[ii]);
+    for (size_t ii = 2; ii < _packet.value.length; ++ii) { // length is length of type, payload, and CRC
+        crc = calculateCRC(crc, _packet.value.payload[ii - 2]);
     }
     return crc;
 }

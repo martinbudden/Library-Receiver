@@ -49,7 +49,7 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
 
     // track dropped packets
     _receivedPacketCount = _transceiver.getReceivedPacketCount();
-    _droppedPacketCount = static_cast<int32_t>(_receivedPacketCount - _packetCount);
+    _droppedPacketCount = static_cast<int32_t>(_receivedPacketCount) - _packetCount;
     _droppedPacketCountDelta = _droppedPacketCount - _droppedPacketCountPrevious;
     _droppedPacketCountPrevious = _droppedPacketCount;
 
@@ -251,7 +251,7 @@ void ReceiverAtomJoyStick::setCurrentReadingsToBias()
     }
 }
 
-float ReceiverAtomJoyStick::normalizedStick(int stickIndex) const
+float ReceiverAtomJoyStick::normalizedStick(size_t stickIndex) const
 {
     const stick_t stick = _sticks[stickIndex];
     if (!_biasIsSet) {
