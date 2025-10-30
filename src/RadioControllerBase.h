@@ -15,6 +15,7 @@ public:
         float yawStick;
     };
 public:
+    virtual ~RadioControllerBase() = default;
     explicit RadioControllerBase(ReceiverBase& receiver) : _receiver(receiver) {}
     const ReceiverBase& getReceiver() const { return _receiver; }
     ReceiverBase& getReceiver() { return _receiver; }

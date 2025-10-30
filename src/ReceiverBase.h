@@ -117,5 +117,6 @@ protected:
 
 class ReceiverWatcher {
 public:
+    virtual ~ReceiverWatcher() = default;
     virtual void newReceiverPacketAvailable() = 0;
 };
