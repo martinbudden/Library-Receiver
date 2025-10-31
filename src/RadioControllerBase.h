@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ReceiverBase.h"
+class ReceiverBase;
+
 
 /*!
 The RadioController is what connects the Receiver to the VehicleController.

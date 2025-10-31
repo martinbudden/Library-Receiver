@@ -1,5 +1,6 @@
 #include "ReceiverTask.h"
 #include "RadioControllerBase.h"
+#include "ReceiverBase.h"
 
 #include <TimeMicroseconds.h>
 
