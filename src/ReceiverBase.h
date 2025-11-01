@@ -15,7 +15,7 @@ Abstract Base Class defining a receiver.
 class ReceiverBase {
 public:
     enum { STICK_COUNT = 4 };
-    enum { MOTOR_ON_OFF_SWITCH = 0 };
+    enum { MOTOR_ON_OFF_SWITCH = 0, CONTROL_MODE_SWITCH = 1, ALTITUDE_MODE_SWITCH = 2 };
     enum { CHANNEL_LOW =  1000, CHANNEL_HIGH = 2000, CHANNEL_MIDDLE = 1500, CHANNEL_RANGE = CHANNEL_HIGH - CHANNEL_LOW };
     static constexpr float CHANNEL_LOW_F = 1000.0F;
     static constexpr float CHANNEL_HIGH_F = 2000.0F;
