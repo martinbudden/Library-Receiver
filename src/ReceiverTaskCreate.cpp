@@ -24,25 +24,25 @@
 #endif // FRAMEWORK_USE_FREERTOS
 
 
-ReceiverTask* ReceiverTask::createTask(RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core)
+ReceiverTask* ReceiverTask::createTask(CockpitBase& cockpit, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core)
 {
-    return createTask(radioController, receiverWatcher, priority, core, 0);
+    return createTask(cockpit, receiverWatcher, priority, core, 0);
 }
 
-ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core)
+ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, CockpitBase& cockpit, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core)
 {
-    return createTask(taskInfo, radioController, receiverWatcher, priority, core, 0);
+    return createTask(taskInfo, cockpit, receiverWatcher, priority, core, 0);
 }
 
-ReceiverTask* ReceiverTask::createTask(RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds)
+ReceiverTask* ReceiverTask::createTask(CockpitBase& cockpit, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds)
 {
     task_info_t taskInfo {};
-    return createTask(taskInfo, radioController, receiverWatcher, priority, core, taskIntervalMicroseconds);
+    return createTask(taskInfo, cockpit, receiverWatcher, priority, core, taskIntervalMicroseconds);
 }
 
-ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds)
+ReceiverTask* ReceiverTask::createTask(task_info_t& taskInfo, CockpitBase& cockpit, ReceiverWatcher* receiverWatcher, uint8_t priority, uint32_t core, uint32_t taskIntervalMicroseconds)
 {
-    static ReceiverTask receiverTask(taskIntervalMicroseconds, radioController, receiverWatcher);
+    static ReceiverTask receiverTask(taskIntervalMicroseconds, cockpit, receiverWatcher);
 
     // Note that task parameters must not be on the stack, since they are used when the task is started, which is after this function returns.
     static TaskBase::parameters_t taskParameters { // NOLINT(misc-const-correctness) false positive

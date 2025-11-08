@@ -1,6 +1,6 @@
-#include "ReceiverTask.h"
-#include "RadioControllerBase.h"
+#include "CockpitBase.h"
 #include "ReceiverBase.h"
+#include "ReceiverTask.h"
 
 #include <TimeMicroseconds.h>
 
@@ -18,10 +18,10 @@
 #endif
 
 
-ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroseconds, RadioControllerBase& radioController, ReceiverWatcher* receiverWatcher) :
+ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroseconds, CockpitBase& cockpit, ReceiverWatcher* receiverWatcher) :
     TaskBase(taskIntervalMicroseconds),
-    _radioController(radioController),
-    _receiver(radioController.getReceiver()),
+    _cockpit(cockpit),
+    _receiver(cockpit.getReceiver()),
     _receiverWatcher(receiverWatcher)
 {
 }
@@ -42,16 +42,16 @@ void ReceiverTask::loop()
     _tickCountPrevious = tickCount;
 
     if (_receiver.update(_tickCountDelta)) {
-        RadioControllerBase::controls_t controls; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+        CockpitBase::controls_t controls; // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
         controls.tickCount = tickCount;
         _receiver.getStickValues(controls.throttleStick, controls.rollStick, controls.pitchStick, controls.yawStick);
-        _radioController.updateControls(controls);
+        _cockpit.updateControls(controls);
         // if there a watcher, then let it know there is a new packet
         if (_receiverWatcher) {
             _receiverWatcher->newReceiverPacketAvailable();
         }
     } else {
-        _radioController.checkFailsafe(tickCount);
+        _cockpit.checkFailsafe(tickCount);
     }
 }
 
@@ -66,12 +66,12 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
     if (_taskIntervalMicroseconds == 0) {
         // event driven scheduling
         while (true) {
-            const uint32_t ticksToWait = _radioController.getTimeoutTicks();
+            const uint32_t ticksToWait = _cockpit.getTimeoutTicks();
             if (_receiver.WAIT_FOR_DATA_RECEIVED(ticksToWait) == pdPASS) {
                 loop();
             } else {
                 // WAIT timed out, so check failsafe
-                _radioController.checkFailsafe(xTaskGetTickCount());
+                _cockpit.checkFailsafe(xTaskGetTickCount());
             }
         }
     } else {

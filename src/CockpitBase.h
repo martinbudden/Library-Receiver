@@ -1,12 +1,11 @@
 #pragma once
 
+#include <cstdint> // NOLINT(clang-diagnostic-pragma-pack)
+
 class ReceiverBase;
 
 
-/*!
-The RadioController is what connects the Receiver to the VehicleController.
-*/
-class RadioControllerBase {
+class CockpitBase {
 public:
     struct controls_t {
         uint32_t tickCount;
@@ -16,8 +15,8 @@ public:
         float yawStick;
     };
 public:
-    virtual ~RadioControllerBase() = default;
-    explicit RadioControllerBase(ReceiverBase& receiver) : _receiver(receiver) {}
+    virtual ~CockpitBase() = default;
+    explicit CockpitBase(ReceiverBase& receiver) : _receiver(receiver) {}
     const ReceiverBase& getReceiver() const { return _receiver; }
     ReceiverBase& getReceiver() { return _receiver; }
     uint32_t getTimeoutTicks() const { return _timeoutTicks; }
