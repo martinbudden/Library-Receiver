@@ -80,10 +80,10 @@ public:
     inline controls_t getControls() const { return _controls; }
     controls_pwm_t getControlsPWM() const {
         return controls_pwm_t {
-            .throttle = static_cast<uint16_t>((_controls.throttle * CHANNEL_RANGE_F) + CHANNEL_MIDDLE_F),
-            .roll = static_cast<uint16_t>((_controls.roll * CHANNEL_RANGE_F) + CHANNEL_MIDDLE_F),
-            .pitch = static_cast<uint16_t>((_controls.pitch * CHANNEL_RANGE_F) + CHANNEL_MIDDLE_F),
-            .yaw = static_cast<uint16_t>((_controls.yaw * CHANNEL_RANGE_F) + CHANNEL_MIDDLE_F)
+            .throttle = static_cast<uint16_t>((_controls.throttle * CHANNEL_RANGE_F) + CHANNEL_LOW_F),
+            .roll = static_cast<uint16_t>((_controls.roll * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
+            .pitch = static_cast<uint16_t>((_controls.pitch * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
+            .yaw = static_cast<uint16_t>((_controls.yaw * CHANNEL_RANGE_F /2.0F) + CHANNEL_MIDDLE_F)
         };
     }
 
