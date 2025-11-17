@@ -20,7 +20,7 @@ public:
     static constexpr float CHANNEL_LOW_F = 1000.0F;
     static constexpr float CHANNEL_HIGH_F = 2000.0F;
     static constexpr float CHANNEL_MIDDLE_F = 1500.0F;
-    static constexpr float CHANNEL_RANGE_F = 2000.0F;
+    static constexpr float CHANNEL_RANGE_F = 1000.0F;
     enum { // standardize receivers to use AETR (Ailerons, Elevator, Throttle, Rudder), ie ROLL, PITCH, THROTTLE, YAW
         ROLL,
         PITCH,
