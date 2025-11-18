@@ -15,7 +15,7 @@ ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress, uint8_t ch
 /*!
 Initialize the transceiver.
 */
-int ReceiverAtomJoyStick::init()
+int32_t ReceiverAtomJoyStick::init()
 {
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
     const esp_err_t err = _transceiver.init(_received_data, nullptr);
@@ -61,6 +61,12 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
 
         // Save the stick values.
         _controls.throttle = normalizedStick(THROTTLE);
+        // Atom Joystick returns throttle in range [-1.0, 1.0]
+        // _positiveHalfThrottle discards range [-1.0, 0.0) for use by aerial vehicles
+        // since Atom Joystick is sprung to return to center position on all axes
+        if (_positiveHalfThrottle) {
+            _controls.throttle = std::max(0.0F, 2.0F*_controls.throttle); // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
+        }
         _controls.roll = normalizedStick(ROLL);
         _controls.pitch = normalizedStick(PITCH);
         _controls.yaw = normalizedStick(YAW);

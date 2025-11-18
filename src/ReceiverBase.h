@@ -78,9 +78,21 @@ public:
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const = 0;
 
     inline controls_t getControls() const { return _controls; }
+    //! Maps floats in range [0,1] for throttle, [-1,1] for roll, pitch, and yaw to channels in range [1000,2000]
     controls_pwm_t getControlsPWM() const {
         return controls_pwm_t {
-            .throttle = static_cast<uint16_t>((_controls.throttle * CHANNEL_RANGE_F) + CHANNEL_LOW_F),
+            .throttle = static_cast<uint16_t>((_controls.throttle * CHANNEL_RANGE_F / 2.0F) + CHANNEL_LOW_F),
+            .roll = static_cast<uint16_t>((_controls.roll * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
+            .pitch = static_cast<uint16_t>((_controls.pitch * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
+            .yaw = static_cast<uint16_t>((_controls.yaw * CHANNEL_RANGE_F /2.0F) + CHANNEL_MIDDLE_F)
+        };
+    }
+    /*! For reversible robots and 3D flying
+        Maps floats in the range [-1,1] for throttle, roll, pitch, and yaw to channels in range [1000,2000]
+    */
+    controls_pwm_t getControlsPWM_NegativeThrottle() const {
+        return controls_pwm_t {
+            .throttle = static_cast<uint16_t>((_controls.throttle * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
             .roll = static_cast<uint16_t>((_controls.roll * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
             .pitch = static_cast<uint16_t>((_controls.pitch * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
             .yaw = static_cast<uint16_t>((_controls.yaw * CHANNEL_RANGE_F /2.0F) + CHANNEL_MIDDLE_F)

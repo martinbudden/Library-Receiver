@@ -6,7 +6,7 @@
 
 class ReceiverAtomJoyStick : public ReceiverBase {
 public:
-    explicit ReceiverAtomJoyStick(const uint8_t* macAddress, uint8_t channel);
+    ReceiverAtomJoyStick(const uint8_t* macAddress, uint8_t channel);
 private:
     // Receiver is not copyable or moveable
     ReceiverAtomJoyStick(const ReceiverAtomJoyStick&) = delete;
@@ -18,7 +18,8 @@ public:
     enum { MODE_STABLE = 0, MODE_SPORT = 1 };
     enum { ALT_MODE_AUTO = 4, ALT_MODE_MANUAL = 5};
 public:
-    int init();
+    int32_t init();
+    void setPositiveHalfThrottle(bool positiveHalfThrottle) { _positiveHalfThrottle = positiveHalfThrottle; }
 
     virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) override;
     virtual bool update(uint32_t tickCountDelta) override;
@@ -63,4 +64,5 @@ private:
     uint8_t _armButton {0};
     uint8_t _flipButton {0};
     uint8_t _proactiveFlag {0};
+    uint8_t _positiveHalfThrottle {0};
 };
