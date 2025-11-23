@@ -99,9 +99,9 @@ public:
         };
     }
 
-    virtual uint16_t getChannelRaw(size_t index) const = 0;
+    virtual uint16_t getChannelPWM(size_t index) const = 0;
     uint32_t getAuxiliaryChannelCount() const { return _auxiliaryChannelCount; }
-    uint16_t getAuxiliaryChannel(size_t index) const { return getChannelRaw(index + STICK_COUNT); }
+    uint16_t getAuxiliaryChannel(size_t index) const { return getChannelPWM(index + STICK_COUNT); }
 
     inline uint32_t getSwitch(size_t index) const { return static_cast<uint32_t>((_switches & (0b11U << (2*index))) >> (2*index)); }
     inline void setSwitch(size_t index, uint8_t value) { _switches &= static_cast<uint32_t>(~(0b11U << (2*index))); _switches |= static_cast<uint32_t>((value & 0b11U) << (2*index)); }

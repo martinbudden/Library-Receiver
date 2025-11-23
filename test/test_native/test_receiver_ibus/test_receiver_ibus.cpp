@@ -50,20 +50,20 @@ void test_receiver_ibus()
     TEST_ASSERT_EQUAL(0x4F80, receiver.getReceivedChecksum());
     TEST_ASSERT_EQUAL(0x4F80, receiver.calculateChecksum());
 
-    TEST_ASSERT_EQUAL(0x05DB, receiver.getChannelRaw(0));
-    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelRaw(1));
-    TEST_ASSERT_EQUAL(0x0554, receiver.getChannelRaw(2));
-    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelRaw(3));
-    TEST_ASSERT_EQUAL(0x03E8, receiver.getChannelRaw(4));
-    TEST_ASSERT_EQUAL(0x07D0, receiver.getChannelRaw(5));
-    TEST_ASSERT_EQUAL(0x05D2, receiver.getChannelRaw(6));
-    TEST_ASSERT_EQUAL(0x03E8, receiver.getChannelRaw(7));
-    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelRaw(8));
-    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelRaw(9));
-    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelRaw(10));
-    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelRaw(11));
-    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelRaw(12));
-    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelRaw(13));
+    TEST_ASSERT_EQUAL(0x05DB, receiver.getChannelPWM(0));
+    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelPWM(1));
+    TEST_ASSERT_EQUAL(0x0554, receiver.getChannelPWM(2));
+    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelPWM(3));
+    TEST_ASSERT_EQUAL(0x03E8, receiver.getChannelPWM(4));
+    TEST_ASSERT_EQUAL(0x07D0, receiver.getChannelPWM(5));
+    TEST_ASSERT_EQUAL(0x05D2, receiver.getChannelPWM(6));
+    TEST_ASSERT_EQUAL(0x03E8, receiver.getChannelPWM(7));
+    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelPWM(8));
+    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelPWM(9));
+    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelPWM(10));
+    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelPWM(11));
+    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelPWM(12));
+    TEST_ASSERT_EQUAL(0x05DC, receiver.getChannelPWM(13));
  }
 
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-convert-member-functions-to-static,readability-magic-numbers)

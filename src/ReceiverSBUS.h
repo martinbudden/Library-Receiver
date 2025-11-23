@@ -27,7 +27,7 @@ private:
 public:
     virtual bool onDataReceived(uint8_t data) override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
-    virtual uint16_t getChannelRaw(size_t index) const override;
+    virtual uint16_t getChannelPWM(size_t index) const override;
     virtual bool unpackPacket() override;
 private:
     enum { PACKET_SIZE = 25 };

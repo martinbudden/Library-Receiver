@@ -38,7 +38,7 @@ void ReceiverNull::getStickValues(float& throttleStick, float& rollStick, float&
     yawStick = _controls.yaw;
 }
 
-uint16_t ReceiverNull::getChannelRaw(size_t index) const
+uint16_t ReceiverNull::getChannelPWM(size_t index) const
 {
     // map switches to the auxiliary channels
     if (index < STICK_COUNT) {

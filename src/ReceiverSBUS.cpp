@@ -23,7 +23,7 @@ void ReceiverSBUS::getStickValues(float& throttleStick, float& rollStick, float&
     yawStick = (static_cast<float>(_channels[YAW]) - CHANNEL_MIDDLE_F) / CHANNEL_RANGE_F;
 }
 
-uint16_t ReceiverSBUS::getChannelRaw(size_t index) const
+uint16_t ReceiverSBUS::getChannelPWM(size_t index) const
 {
     if (index >= CHANNEL_COUNT) {
         return CHANNEL_LOW;

@@ -126,15 +126,25 @@ uint16_t ReceiverAtomJoyStick::getAuxiliaryChannel(size_t index) const
     return (index >= _auxiliaryChannelCount) ? CHANNEL_LOW : getSwitch(index) ? CHANNEL_HIGH : CHANNEL_LOW;
 }
 #endif
-uint16_t ReceiverAtomJoyStick::getChannelRaw(size_t index) const
+
+uint16_t ReceiverAtomJoyStick::getChannelPWM(size_t index) const
 {
-    if (index < STICK_COUNT) {
-        return static_cast<uint16_t>(_sticks[index].rawQ12dot4 >> 2);
-    }
     if (index >= _auxiliaryChannelCount + STICK_COUNT) {
         return CHANNEL_LOW;
     }
-    return getSwitch(index - STICK_COUNT) ? CHANNEL_HIGH : CHANNEL_LOW;
+    switch (index) {
+    case ROLL:
+        return static_cast<uint16_t>(_controls.roll*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);
+    case PITCH:
+        return static_cast<uint16_t>(_controls.pitch*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);
+    case THROTTLE:
+        return _positiveHalfThrottle ? static_cast<uint16_t>(_controls.throttle*CHANNEL_RANGE_F + CHANNEL_LOW_F)
+                                     : static_cast<uint16_t>(_controls.throttle*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);
+    case YAW:
+        return static_cast<uint16_t>(_controls.yaw*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);
+    default:
+        return getSwitch(index - STICK_COUNT) ? CHANNEL_HIGH : CHANNEL_LOW;
+    }
 }
 
 esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCount, uint32_t broadcastDelayMs) const

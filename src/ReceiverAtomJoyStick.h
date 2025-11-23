@@ -27,7 +27,7 @@ public:
     virtual EUI_48_t getMyEUI() const override;
     virtual EUI_48_t getPrimaryPeerEUI() const override;
     virtual void broadcastMyEUI() const override;
-    uint16_t getChannelRaw(size_t index) const override;
+    uint16_t getChannelPWM(size_t index) const override;
 
     ESPNOW_Transceiver& getESPNOW_Transceiver() { return _transceiver; }
     static int32_t ubyte4float_to_Q12dot4(const uint8_t f[4]);
