@@ -9,6 +9,12 @@
 #define FAST_CODE
 #endif
 
+class ReceiverWatcher {
+public:
+    virtual ~ReceiverWatcher() = default;
+    virtual void newReceiverPacketAvailable() = 0;
+};
+
 /*!
 Abstract Base Class defining a receiver.
 */
@@ -64,6 +70,10 @@ public:
     };
 public:
     virtual ~ReceiverBase() = default;
+
+    ReceiverWatcher* getReceiverWatcher() const { return _receiverWatcher; }
+    void setReceiverWatcher(ReceiverWatcher* receiverWatcher) { _receiverWatcher = receiverWatcher; }
+
     // 48-bit Extended Unique Identifiers, usually the MAC address if the receiver has one, but may be an alternative provided by the receiver.
     virtual EUI_48_t getMyEUI() const { const EUI_48_t ret {}; return ret; }
     virtual EUI_48_t getPrimaryPeerEUI() const  { const EUI_48_t ret {}; return ret; }
@@ -115,6 +125,7 @@ public:
     inline bool isNewPacketAvailable() const { return _newPacketAvailable; }
     inline void clearNewPacketAvailable() { _newPacketAvailable = false; }
 protected:
+    ReceiverWatcher* _receiverWatcher {nullptr};
     int32_t _packetReceived {false}; // may be invalid packet
     int32_t _newPacketAvailable {false};
     int32_t _packetCount {};
@@ -125,10 +136,4 @@ protected:
     uint32_t _switches {}; // 16 2 or 3 positions switches, each using 2-bits
     controls_t _controls {}; //!< the main 4 channels
     uint32_t _auxiliaryChannelCount {};
-};
-
-class ReceiverWatcher {
-public:
-    virtual ~ReceiverWatcher() = default;
-    virtual void newReceiverPacketAvailable() = 0;
 };

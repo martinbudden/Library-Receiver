@@ -18,11 +18,11 @@
 #endif
 
 
-ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroseconds, CockpitBase& cockpit, ReceiverWatcher* receiverWatcher) :
+ReceiverTask::ReceiverTask(uint32_t taskIntervalMicroseconds, ReceiverBase& receiver, CockpitBase& cockpit) :
     TaskBase(taskIntervalMicroseconds),
+    _receiver(receiver),
     _cockpit(cockpit),
-    _receiver(cockpit.getReceiver()),
-    _receiverWatcher(receiverWatcher)
+    _receiverWatcher(receiver.getReceiverWatcher())
 {
 }
 
