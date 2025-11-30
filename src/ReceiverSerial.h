@@ -58,25 +58,26 @@ public:
         int8_t port;
         int8_t pin;
     };
-    struct rx_pins_t {
+    struct uart_pins_t {
         int8_t rx;
         int8_t tx;
     };
-    struct stm32_rx_pins_t {
+    struct stm32_uart_pins_t {
         port_pin_t rx;
         port_pin_t tx;
     };
-    struct uart_pin_t {
+protected:
+    struct serial_pin_t {
         int8_t port;
         int8_t pin;
         bool inverted;
     };
-    struct uart_pins_t {
-        uart_pin_t rx;
-        uart_pin_t tx;
+    struct serial_pins_t {
+        serial_pin_t rx;
+        serial_pin_t tx;
     };
 public:
-    ReceiverSerial(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
+    ReceiverSerial(const serial_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
     void init();
 private:
     // Receiver is not copyable or moveable
@@ -104,7 +105,7 @@ protected:
     timeUs32_t _startTime {};
 private:
     static ReceiverSerial* self; //!< alias of `this` to be used in interrupt service routine
-    const uart_pins_t _pins {};
+    const serial_pins_t _pins {};
     const uint8_t _uartIndex;
     const uint8_t _dataBits;
     const uint8_t _stopBits;

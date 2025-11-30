@@ -59,7 +59,7 @@ FAST_CODE void ReceiverSerial::dataReadyISR()
 /*!
 Negative pin means it is inverted.
 */
-ReceiverSerial::ReceiverSerial(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) : // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
+ReceiverSerial::ReceiverSerial(const serial_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) : // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     _pins({
         .rx = { .port = pins.rx.port, .pin = static_cast<int8_t>(pins.rx.pin < 0 ? -pins.rx.pin : pins.rx.pin), .inverted = pins.rx.pin < 0 },
         .tx = { .port = pins.tx.port, .pin = static_cast<int8_t>(pins.tx.pin < 0 ? -pins.tx.pin : pins.tx.pin), .inverted = pins.tx.pin < 0 }
