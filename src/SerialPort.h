@@ -109,7 +109,7 @@ public:
     uint8_t readByte();
     size_t availableForWrite() const;
     size_t write(const uint8_t* buf, size_t len);
-private:
+public:
     static void dataReadyISR();
 #if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     static void dataReadyISR(const UART_HandleTypeDef *huart);
