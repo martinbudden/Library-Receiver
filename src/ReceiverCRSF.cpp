@@ -1,14 +1,14 @@
 #include "ReceiverCRSF.h"
 
 
-ReceiverCRSF::ReceiverCRSF(const stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverSerial(serial_pins_t{{pins.tx.port,pins.tx.pin,false},{pins.rx.port,pins.rx.pin,false}}, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
+ReceiverCRSF::ReceiverCRSF(const SerialPort::stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
+    ReceiverSerial(SerialPort::serial_pins_t{{pins.tx.port,pins.tx.pin,false},{pins.rx.port,pins.rx.pin,false}}, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
 {
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
 
-ReceiverCRSF::ReceiverCRSF(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverCRSF(stm32_uart_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
+ReceiverCRSF::ReceiverCRSF(const SerialPort::uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
+    ReceiverCRSF(SerialPort::stm32_uart_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
 {
 }
 
@@ -47,7 +47,7 @@ uint16_t ReceiverCRSF::getChannelPWM(size_t index) const
 /*!
 Called from within ReceiverSerial ISR.
 */
-bool ReceiverCRSF::onDataReceived(uint8_t data)
+bool ReceiverCRSF::onDataReceivedFromISR(uint8_t data)
 {
     const timeUs32_t timeNowUs = timeUs();
     if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME_US) {

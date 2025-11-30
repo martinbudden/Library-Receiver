@@ -84,7 +84,7 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
             vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
             while (_receiver.isDataAvailable()) {
                 // Read 1 byte from UART buffer and give it to the RX protocol parser
-                if (_receiver.onDataReceived(_receiver.getByte())) {
+                if (_receiver.onDataReceivedFromISR(_receiver.readByte())) {
                     // onDataReceived returns true once packet is complete
                     break;
                 }

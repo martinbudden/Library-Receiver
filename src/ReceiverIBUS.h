@@ -11,13 +11,13 @@ public:
     static constexpr uint32_t CHANNEL_COUNT = 18;
     enum { SLOT_COUNT = 14 };
     enum { BAUD_RATE = 115200 };
-    enum { DATA_BITS = 8, PARITY = PARITY_NONE, STOP_BITS = 1 }; // 8N1
+    enum { DATA_BITS = 8, PARITY = SerialPort::PARITY_NONE, STOP_BITS = 1 }; // 8N1
     enum { TIME_NEEDED_PER_FRAME_US = 3000 };
     enum { MODEL_IA6, MODEL_IA6B };
     enum { SERIAL_RX_PACKET_LENGTH = 32, TELEMETRY_PACKET_LENGTH = 4 };
 public:
-    ReceiverIBUS(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
-    ReceiverIBUS(const stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    ReceiverIBUS(const SerialPort::uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    ReceiverIBUS(const SerialPort::stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
 private:
     // Receiver is not copyable or moveable
     ReceiverIBUS(const ReceiverIBUS&) = delete;
@@ -25,7 +25,7 @@ private:
     ReceiverIBUS(ReceiverIBUS&&) = delete;
     ReceiverIBUS& operator=(ReceiverIBUS&&) = delete;
 public:
-    virtual bool onDataReceived(uint8_t data) override;
+    virtual bool onDataReceivedFromISR(uint8_t data) override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual uint16_t getChannelPWM(size_t index) const override;
     virtual bool unpackPacket() override;

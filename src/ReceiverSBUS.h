@@ -13,11 +13,11 @@ public:
     static constexpr uint32_t CHANNEL_COUNT = 18;
     enum { SBUS_START_BYTE = 0x0F, SBUS_END_BYTE = 0x00 };
     enum { BAUD_RATE = 100000, FAST_BAUDRATE = 200000 };
-    enum { DATA_BITS = 8, PARITY = PARITY_EVEN, STOP_BITS = 2 }; // 8E2
+    enum { DATA_BITS = 8, PARITY = SerialPort::PARITY_EVEN, STOP_BITS = 2 }; // 8E2
     enum { TIME_NEEDED_PER_FRAME_US = 3000 };
 public:
-    ReceiverSBUS(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
-    ReceiverSBUS(const stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    ReceiverSBUS(const SerialPort::uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    ReceiverSBUS(const SerialPort::stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
 private:
     // Receiver is not copyable or moveable
     ReceiverSBUS(const ReceiverSBUS&) = delete;
@@ -25,7 +25,7 @@ private:
     ReceiverSBUS(ReceiverSBUS&&) = delete;
     ReceiverSBUS& operator=(ReceiverSBUS&&) = delete;
 public:
-    virtual bool onDataReceived(uint8_t data) override;
+    virtual bool onDataReceivedFromISR(uint8_t data) override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual uint16_t getChannelPWM(size_t index) const override;
     virtual bool unpackPacket() override;

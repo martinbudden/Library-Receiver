@@ -1,14 +1,14 @@
 #include "ReceiverIBUS.h"
 
 
-ReceiverIBUS::ReceiverIBUS(const stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverSerial(serial_pins_t{{pins.tx.port,pins.tx.pin,false},{pins.rx.port,pins.rx.pin,false}}, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
+ReceiverIBUS::ReceiverIBUS(const SerialPort::stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
+    ReceiverSerial(SerialPort::serial_pins_t{{pins.tx.port,pins.tx.pin,false},{pins.rx.port,pins.rx.pin,false}}, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
 {
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
 }
 
-ReceiverIBUS::ReceiverIBUS(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverIBUS(stm32_uart_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
+ReceiverIBUS::ReceiverIBUS(const SerialPort::uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
+    ReceiverIBUS(SerialPort::stm32_uart_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
 {
 }
 
@@ -34,7 +34,7 @@ uint16_t ReceiverIBUS::getChannelPWM(size_t index) const
 /*!
 Called from within ReceiverSerial ISR.
 */
-bool ReceiverIBUS::onDataReceived(uint8_t data)
+bool ReceiverIBUS::onDataReceivedFromISR(uint8_t data)
 {
     const timeUs32_t timeNowUs = timeUs();
     enum { TIME_ALLOWANCE = 500 };

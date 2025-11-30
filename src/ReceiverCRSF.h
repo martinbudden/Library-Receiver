@@ -10,7 +10,7 @@ class ReceiverCRSF : public ReceiverSerial {
 public:
     static constexpr uint32_t CHANNEL_COUNT = 16;
     enum { BAUD_RATE = 416666, BAUD_RATE_UNOFFICIAL = 420000 };
-    enum { DATA_BITS = 8, PARITY = PARITY_NONE, STOP_BITS = 1 }; // 8N1
+    enum { DATA_BITS = 8, PARITY = SerialPort::PARITY_NONE, STOP_BITS = 1 }; // 8N1
     enum { TIME_NEEDED_PER_FRAME_US = 1750 };
 
     enum { CRSF_SYNC_BYTE = 0xC8, EDGE_TX_SYNC_BYTE = 0xEE };
@@ -98,8 +98,8 @@ public:
     };
 #pragma pack(pop)
 public:
-    ReceiverCRSF(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
-    ReceiverCRSF(const stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    ReceiverCRSF(const SerialPort::uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    ReceiverCRSF(const SerialPort::stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
 private:
     // Receiver is not copyable or moveable
     ReceiverCRSF(const ReceiverCRSF&) = delete;
@@ -107,7 +107,7 @@ private:
     ReceiverCRSF(ReceiverCRSF&&) = delete;
     ReceiverCRSF& operator=(ReceiverCRSF&&) = delete;
 public:
-    virtual bool onDataReceived(uint8_t data) override;
+    virtual bool onDataReceivedFromISR(uint8_t data) override;
     virtual void getStickValues(float& throttleStick, float& rollStick, float& pitchStick, float& yawStick) const override;
     virtual uint16_t getChannelPWM(size_t index) const override;
     virtual bool unpackPacket() override;

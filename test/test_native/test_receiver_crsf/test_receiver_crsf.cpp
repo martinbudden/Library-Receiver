@@ -13,7 +13,7 @@ void tearDown()
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-convert-member-functions-to-static,readability-magic-numbers)
 void test_receiver_crsf()
 {
-    static ReceiverCRSF receiver{ReceiverSerial::uart_pins_t{}, 0, 0};
+    static ReceiverCRSF receiver{SerialPort::uart_pins_t{}, 0, 0};
     enum { CRC = 205 };
     ReceiverCRSF::packet_u packet = {
         .value = {
@@ -36,7 +36,7 @@ void test_receiver_crsf()
 
 
     for (uint8_t data : packet.data) {
-        receiver.onDataReceived(data);
+        receiver.onDataReceivedFromISR(data);
     }
     TEST_ASSERT_EQUAL(ReceiverCRSF::CRSF_SYNC_BYTE, receiver.getPacketSync());
     TEST_ASSERT_EQUAL(4, receiver.getPacketLength());
@@ -47,7 +47,7 @@ void test_receiver_crsf()
 
 void test_receiver_bind_packet()
 {
-    static ReceiverCRSF receiver{ReceiverSerial::uart_pins_t{}, 0, 0};
+    static ReceiverCRSF receiver{SerialPort::uart_pins_t{}, 0, 0};
 
     enum { COMMAND_CRC = 0x9E };
     enum { PACKET_CRC = 0xE8 };
@@ -67,7 +67,7 @@ void test_receiver_bind_packet()
         }
     };
     for (uint8_t data : packet.data) {
-        receiver.onDataReceived(data);
+        receiver.onDataReceivedFromISR(data);
     }
     TEST_ASSERT_EQUAL(ReceiverCRSF::CRSF_SYNC_BYTE, receiver.getPacketSync());
     TEST_ASSERT_EQUAL(7, receiver.getPacketLength());

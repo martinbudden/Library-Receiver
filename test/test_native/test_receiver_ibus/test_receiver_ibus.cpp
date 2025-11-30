@@ -13,7 +13,7 @@ void tearDown()
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-convert-member-functions-to-static,readability-magic-numbers)
 void test_receiver_ibus()
 {
-    static ReceiverIBUS receiver{ReceiverSerial::uart_pins_t{}, 0, 0};
+    static ReceiverIBUS receiver{SerialPort::uart_pins_t{}, 0, 0};
 
     receiver.setPacketEmpty();
     TEST_ASSERT_TRUE(receiver.isPacketEmpty());
@@ -26,7 +26,7 @@ void test_receiver_ibus()
         0xDC, 0x05, 0xDC, 0x05, 0xDC, 0x05, 0x80, 0x4F
     };
 
-    TEST_ASSERT_FALSE(receiver.onDataReceived(data[0]));
+    TEST_ASSERT_FALSE(receiver.onDataReceivedFromISR(data[0]));
     TEST_ASSERT_EQUAL(ReceiverIBUS::MODEL_IA6B, receiver.getModel());
     TEST_ASSERT_EQUAL(32, receiver.getSyncByte());
     TEST_ASSERT_EQUAL(32, receiver.getFrameSize());
@@ -34,13 +34,13 @@ void test_receiver_ibus()
     TEST_ASSERT_EQUAL(1, receiver.getPacketIndex());
 
     for (size_t ii = 1; ii < 30; ++ii) {
-        const bool ret = receiver.onDataReceived(data[ii]);
+        const bool ret = receiver.onDataReceivedFromISR(data[ii]);
         TEST_ASSERT_FALSE(ret);
         TEST_ASSERT_EQUAL(ii + 1, receiver.getPacketIndex());
     }
-    TEST_ASSERT_FALSE(receiver.onDataReceived(data[30]));
+    TEST_ASSERT_FALSE(receiver.onDataReceivedFromISR(data[30]));
     TEST_ASSERT_EQUAL(31, receiver.getPacketIndex());
-    TEST_ASSERT_TRUE(receiver.onDataReceived(data[31]));
+    TEST_ASSERT_TRUE(receiver.onDataReceivedFromISR(data[31]));
     TEST_ASSERT_EQUAL(0, receiver.getPacketIndex());
 
     TEST_ASSERT_EQUAL(0x80, receiver.getPacket(30));
