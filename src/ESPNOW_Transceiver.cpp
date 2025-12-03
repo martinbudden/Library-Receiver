@@ -37,14 +37,13 @@ This is an ISR in the high priority WiFi task, and so should not perform any len
 
 Parameter `len` is `int` rather than `size_t` to match `esp_now_recv_cb_t` callback signature.
 */
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW_ESPRESSIF32_6_11_0)
-IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len)
-{
-#else
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW_RECV_INFO)
 IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const esp_now_recv_info* info, const uint8_t* data, int len)
 {
-    //const uint8_t* macAddress = info->src_addr;
     const uint8_t* macAddress = info->des_addr;
+#else
+IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len)
+{
 #endif
     if (!transceiver->isPrimaryPeerMacAddressSet()) {
         // If data is received when the primary peer MAC address is not yet set, it means we are in the binding process

@@ -1,4 +1,4 @@
-#if defined (USE_EMPTY_MAIN)
+#if defined (LIBRARY_RECEIVER_USE_EMPTY_MAIN)
 
 #if defined(FRAMEWORK_RPI_PICO)
 int main()
