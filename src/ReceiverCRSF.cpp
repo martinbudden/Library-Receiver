@@ -50,7 +50,7 @@ Called from within ReceiverSerial ISR.
 bool ReceiverCRSF::onDataReceivedFromISR(uint8_t data)
 {
     const timeUs32_t timeNowUs = timeUs();
-    if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME_US) {
+    if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME_US) { // cppcheck-suppress unsignedLessThanZero
         _packetIndex = 0;
         ++_droppedPacketCount;
     }

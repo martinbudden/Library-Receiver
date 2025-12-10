@@ -60,6 +60,7 @@
 
 class SerialPortWatcherBase {
 public:
+    virtual ~SerialPortWatcherBase() = default;
     virtual bool onDataReceivedFromISR(uint8_t data) = 0;
 };
 

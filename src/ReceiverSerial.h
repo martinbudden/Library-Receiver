@@ -6,6 +6,7 @@
 
 class ReceiverSerialPortWatcher : public SerialPortWatcherBase {
 public:
+    virtual ~ReceiverSerialPortWatcher() = default;
     explicit ReceiverSerialPortWatcher(ReceiverBase& receiver);
     bool onDataReceivedFromISR(uint8_t data) override;
 private:

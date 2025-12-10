@@ -22,6 +22,11 @@ int main()
 
 #elif defined(FRAMEWORK_TEST)
 
+int main()
+{
+    return 0;
+}
+
 #else // defaults to FRAMEWORK_ARDUINO
 
 #include <Arduino.h>

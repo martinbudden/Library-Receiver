@@ -38,7 +38,7 @@ bool ReceiverIBUS::onDataReceivedFromISR(uint8_t data)
 {
     const timeUs32_t timeNowUs = timeUs();
     enum { TIME_ALLOWANCE = 500 };
-    if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME_US) {
+    if (timeNowUs > _startTime + TIME_NEEDED_PER_FRAME_US) { // cppcheck-suppress unsignedLessThanZero
         _packetIndex = 0;
         ++_droppedPacketCount;
     }
