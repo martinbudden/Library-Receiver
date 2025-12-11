@@ -43,7 +43,7 @@ IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const uint8_t* macAddress, con
 #else
 IRAM_ATTR void ESPNOW_Transceiver::onDataReceived(const esp_now_recv_info_t* info, const uint8_t* data, int len)
 {
-    const uint8_t* macAddress = info->des_addr;
+    const uint8_t* macAddress = info->src_addr;
 #endif
     if (!transceiver->isPrimaryPeerMacAddressSet()) {
         // If data is received when the primary peer MAC address is not yet set, it means we are in the binding process
