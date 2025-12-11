@@ -65,7 +65,7 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
         // _positiveHalfThrottle discards range [-1.0, 0.0) for use by aerial vehicles
         // since Atom Joystick is sprung to return to center position on all axes
         if (_positiveHalfThrottle) {
-            _controls.throttle = std::max(0.0F, 2.0F*_controls.throttle); // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
+            _controls.throttle = std::max(0.0F, _controls.throttle); // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
         }
         _controls.roll = normalizedStick(ROLL);
         _controls.pitch = normalizedStick(PITCH);
@@ -138,7 +138,7 @@ uint16_t ReceiverAtomJoyStick::getChannelPWM(size_t index) const
     case PITCH:
         return static_cast<uint16_t>(_controls.pitch*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);
     case THROTTLE:
-        return _positiveHalfThrottle ? static_cast<uint16_t>(_controls.throttle*CHANNEL_RANGE_F + CHANNEL_LOW_F)
+        return _positiveHalfThrottle ? static_cast<uint16_t>(2.0F*_controls.throttle*CHANNEL_RANGE_F + CHANNEL_LOW_F)
                                      : static_cast<uint16_t>(_controls.throttle*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);
     case YAW:
         return static_cast<uint16_t>(_controls.yaw*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);
