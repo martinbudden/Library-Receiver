@@ -138,7 +138,7 @@ uint16_t ReceiverAtomJoyStick::getChannelPWM(size_t index) const
     case PITCH:
         return static_cast<uint16_t>(_controls.pitch*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);
     case THROTTLE:
-        return _positiveHalfThrottle ? static_cast<uint16_t>(2.0F*_controls.throttle*CHANNEL_RANGE_F + CHANNEL_LOW_F)
+        return _positiveHalfThrottle ? static_cast<uint16_t>(2.0F*_controls.throttle*CHANNEL_RANGE_F + CHANNEL_LOW_F) // NOLINT(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
                                      : static_cast<uint16_t>(_controls.throttle*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);
     case YAW:
         return static_cast<uint16_t>(_controls.yaw*CHANNEL_RANGE_F + CHANNEL_MIDDLE_F);

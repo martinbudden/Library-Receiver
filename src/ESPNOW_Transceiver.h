@@ -7,9 +7,6 @@
 
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
 
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW_RECV_INFO)
-struct esp_now_recv_info;
-#endif
 #include <esp_attr.h>
 #include <esp_now.h>
 #include <freertos/FreeRTOS.h>
@@ -79,10 +76,10 @@ private:
     esp_err_t setPrimaryPeerMacAddress(const uint8_t* macAddress);
 private:
     static void onDataSent(const uint8_t* macAddress, esp_now_send_status_t status);
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW_RECV_INFO)
-    static void onDataReceived(const esp_now_recv_info* info, const uint8_t* data, int len); // len is int rather than size_t to match esp_now_recv_cb_t callback signature
-#else
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW_RECV_CB_MAC_ADDRESS) || !defined(LIBRARY_RECEIVER_USE_ESPNOW)
     static void onDataReceived(const uint8_t* macAddress, const uint8_t* data, int len); // len is int rather than size_t to match esp_now_recv_cb_t callback signature
+#else
+    static void onDataReceived(const esp_now_recv_info_t* info, const uint8_t* data, int len); // len is int rather than size_t to match esp_now_recv_cb_t callback signature
 #endif
 private:
     static const std::array<uint8_t, ESP_NOW_ETH_ALEN> broadcastMacAddress;
