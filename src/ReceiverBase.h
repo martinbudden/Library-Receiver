@@ -67,6 +67,7 @@ public:
 
     ReceiverWatcher* getReceiverWatcher() const { return _receiverWatcher; }
     void setReceiverWatcher(ReceiverWatcher* receiverWatcher) { _receiverWatcher = receiverWatcher; }
+    void setPositiveHalfThrottle(bool positiveHalfThrottle) { _positiveHalfThrottle = positiveHalfThrottle; }
 
     // 48-bit Extended Unique Identifiers, usually the MAC address if the receiver has one, but may be an alternative provided by the receiver.
     virtual EUI_48_t getMyEUI() const { const EUI_48_t ret {}; return ret; }
@@ -85,7 +86,7 @@ public:
     //! Maps floats in range [0,1] for throttle, [-1,1] for roll, pitch, and yaw to channels in range [1000,2000]
     controls_pwm_t getControlsPWM() const {
         return controls_pwm_t {
-            .throttle = static_cast<uint16_t>((_controls.throttle * CHANNEL_RANGE_F / 2.0F) + CHANNEL_LOW_F),
+            .throttle = static_cast<uint16_t>(_positiveHalfThrottle ? (_controls.throttle*CHANNEL_RANGE_F + CHANNEL_LOW_F): (_controls.throttle * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
             .roll = static_cast<uint16_t>((_controls.roll * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
             .pitch = static_cast<uint16_t>((_controls.pitch * CHANNEL_RANGE_F / 2.0F) + CHANNEL_MIDDLE_F),
             .yaw = static_cast<uint16_t>((_controls.yaw * CHANNEL_RANGE_F /2.0F) + CHANNEL_MIDDLE_F)
@@ -120,8 +121,9 @@ public:
     inline void clearNewPacketAvailable() { _newPacketAvailable = false; }
 protected:
     ReceiverWatcher* _receiverWatcher {nullptr};
-    int32_t _packetReceived {false}; // may be invalid packet
-    int32_t _newPacketAvailable {false};
+    uint8_t _packetReceived {false}; // may be invalid packet
+    uint8_t _newPacketAvailable {false};
+    uint8_t _positiveHalfThrottle {false};
     int32_t _packetCount {};
     int32_t _droppedPacketCountDelta {};
     int32_t _droppedPacketCount {};

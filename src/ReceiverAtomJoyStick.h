@@ -19,7 +19,6 @@ public:
     enum { ALT_MODE_AUTO = 4, ALT_MODE_MANUAL = 5};
 public:
     int32_t init();
-    void setPositiveHalfThrottle(bool positiveHalfThrottle) { _positiveHalfThrottle = positiveHalfThrottle; }
 
     virtual int32_t WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait) override;
     virtual bool update(uint32_t tickCountDelta) override;
@@ -64,5 +63,4 @@ private:
     uint8_t _armButton {0};
     uint8_t _flipButton {0};
     uint8_t _proactiveFlag {0};
-    uint8_t _positiveHalfThrottle {0};
 };
