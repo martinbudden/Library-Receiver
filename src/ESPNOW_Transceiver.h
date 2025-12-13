@@ -97,31 +97,33 @@ private:
     std::array<uint8_t, ESP_NOW_ETH_ALEN + 2> _myMacAddress {0, 0, 0, 0, 0, 0, 0, 0};
 
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW) && defined(FRAMEWORK_USE_FREERTOS)
-    enum { DATA_READY_QUEUE_LENGTH = 1};
-    mutable uint32_t _primaryDataReceivedQueueItem {}; // this is just a dummy item whose value is not used
-    mutable BaseType_t _primaryDataReceivedQueueHigherPriorityTaskWoken = pdFALSE;
+    enum { DATA_READY_QUEUE_LENGTH = 1}; // length MUST be 1 to be used by xQueueOverwriteFromISR
+
+    uint32_t _primaryDataReceivedQueueItem {}; // this is just a dummy item whose value is not used
+    BaseType_t _primaryDataReceivedQueueHigherPriorityTaskWoken = pdFALSE;
     std::array<uint8_t, DATA_READY_QUEUE_LENGTH * sizeof(_primaryDataReceivedQueueItem)> _primaryDataReceivedQueueStorageArea {};
     StaticQueue_t _primaryDataReceivedQueueStatic {};
     QueueHandle_t _primaryDataReceivedQueue {};
-    mutable uint32_t _secondaryDataReceivedQueueItem {}; // this is just a dummy item whose value is not used
-    mutable BaseType_t _secondaryDataReceivedQueueHigherPriorityTaskWoken = pdFALSE;
+
+    uint32_t _secondaryDataReceivedQueueItem {}; // this is just a dummy item whose value is not used
+    BaseType_t _secondaryDataReceivedQueueHigherPriorityTaskWoken = pdFALSE;
     std::array<uint8_t, DATA_READY_QUEUE_LENGTH * sizeof(_secondaryDataReceivedQueueItem)> _secondaryDataReceivedQueueStorageArea {};
     StaticQueue_t _secondaryDataReceivedQueueStatic {};
     QueueHandle_t _secondaryDataReceivedQueue {};
 public:
-    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED() const { return xQueueReceive(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, portMAX_DELAY); }
-    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED(uint32_t ticksToWait) const { return xQueueReceive(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, ticksToWait); }
-    //inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() const { xQueueSendFromISR(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, nullptr); }
-    inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() const {
+    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED() { return xQueueReceive(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, portMAX_DELAY); }
+    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED(uint32_t ticksToWait) { return xQueueReceive(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, ticksToWait); }
+    //inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() { xQueueSendFromISR(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, nullptr); }
+    inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() {
         xQueueOverwriteFromISR(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, &_primaryDataReceivedQueueHigherPriorityTaskWoken);
         if (_primaryDataReceivedQueueHigherPriorityTaskWoken == pdTRUE) {
             portYIELD_FROM_ISR(); // or portEND_SWITCHING_ISR() depending on the port.
         }
     }
-    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED() const { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, portMAX_DELAY); }
-    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED(uint32_t ticksToWait) const { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, ticksToWait); }
-    //inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() const { xQueueSendFromISR(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, nullptr); }
-    inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() const {
+    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED() { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, portMAX_DELAY); }
+    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED(uint32_t ticksToWait) { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, ticksToWait); }
+    //inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() { xQueueSendFromISR(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, nullptr); }
+    inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() {
         xQueueSendFromISR(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, &_secondaryDataReceivedQueueHigherPriorityTaskWoken);
         if (_secondaryDataReceivedQueueHigherPriorityTaskWoken == pdTRUE) {
             portYIELD_FROM_ISR(); // or portEND_SWITCHING_ISR() depending on the port.
@@ -129,11 +131,11 @@ public:
     }
 #else
 public:
-    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED() const { return 0; }
-    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED(uint32_t ticksToWait) const { (void)ticksToWait; return 0; }
-    inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() const {}
-    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED() const { return 0; }
-    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED(uint32_t ticksToWait) const { (void)ticksToWait; return 0; }
-    inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() const {}
+    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED() { return 0; }
+    inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED(uint32_t ticksToWait) { (void)ticksToWait; return 0; }
+    inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() {}
+    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED() { return 0; }
+    inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED(uint32_t ticksToWait) { (void)ticksToWait; return 0; }
+    inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() {}
 #endif
 };

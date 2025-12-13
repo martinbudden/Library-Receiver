@@ -38,6 +38,7 @@
         "Isrc",
         "libc",
         "llvmlibc",
+        "LOGI",
         "martinbudden",
         "noreturn",
         "pioenvs",

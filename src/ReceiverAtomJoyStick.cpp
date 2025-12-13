@@ -1,7 +1,13 @@
 #include "ReceiverAtomJoyStick.h"
 #include <cstring>
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW)
-#include <HardwareSerial.h>
+//#include <HardwareSerial.h>
+#include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#else
+
+
 #endif
 
 ReceiverAtomJoyStick::ReceiverAtomJoyStick(const uint8_t* macAddress, uint8_t channel) :
@@ -81,8 +87,10 @@ bool ReceiverAtomJoyStick::update(uint32_t tickCountDelta)
         _newPacketAvailable = true;
         return true;
     }
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
-    Serial.printf("BadPacket\r\n");
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
+    static const char *TAG = "ReceiverAtomJoyStick::update";
+    ESP_LOGI(TAG, "BadPacket");
+    //Serial.printf("BadPacket\r\n");
 #endif
     // we've had a packet even though it is a bad one, so we haven't lost contact with the receiver
     return true;
@@ -163,13 +171,15 @@ esp_err_t ReceiverAtomJoyStick::broadcastMyMacAddressForBinding(int broadcastCou
         const esp_err_t err = _transceiver.broadcastData(&data[0], sizeof(data));
         //  cppcheck-suppress knownConditionTrueFalse
         if (err != ESP_OK) {
-#if defined(LIBRARY_RECEIVER_USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
-            Serial.printf("broadcastMyMacAddressForBinding failed: %X\r\n", err);
+#if defined(LIBRARY_RECEIVER_USE_ESPNOW)
+            static const char *TAG = "ReceiverAtomJoyStick::broadcastMyMacAddressForBinding";
+            ESP_LOGI(TAG, "failed: %X", err);
+            //Serial.printf("broadcastMyMacAddressForBinding failed: %X\r\n", err);
 #endif
             return err;
         }
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW) && !defined(FRAMEWORK_ESPIDF)
-        delay(broadcastDelayMs); // delay() function has units of milliseconds
+        vTaskDelay(pdMS_TO_TICKS(broadcastDelayMs));
 #else
         (void)broadcastDelayMs;
 #endif

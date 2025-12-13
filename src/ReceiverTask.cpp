@@ -65,8 +65,8 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
     // BaseType_t is int, TickType_t is uint32_t
     if (_taskIntervalMicroseconds == 0) {
         // event driven scheduling
+        const uint32_t ticksToWait = _cockpit.getTimeoutTicks();
         while (true) {
-            const uint32_t ticksToWait = _cockpit.getTimeoutTicks();
             if (_receiver.WAIT_FOR_DATA_RECEIVED(ticksToWait) == pdPASS) {
                 loop();
             } else {
