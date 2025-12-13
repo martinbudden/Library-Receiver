@@ -138,19 +138,24 @@ private:
 
 #if defined(FRAMEWORK_USE_FREERTOS)
 
-    mutable uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
+    uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
+    BaseType_t _dataReadyQueueHigherPriorityTaskWoken = pdFALSE;
     enum { IMU_DATA_READY_QUEUE_LENGTH = 1 };
     std::array<uint8_t, IMU_DATA_READY_QUEUE_LENGTH * sizeof(_dataReadyQueueItem)> _dataReadyQueueStorageArea {};
     StaticQueue_t _dataReadyQueueStatic {};
     QueueHandle_t _dataReadyQueue {};
 public:
-    inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { return xQueueReceive(_dataReadyQueue, &_dataReadyQueueItem, ticksToWait); } // returns pdPASS(1) if queue read, pdFAIL(0) if timeout
-    inline void SIGNAL_DATA_READY_FROM_ISR() const { xQueueSendFromISR(_dataReadyQueue, &_dataReadyQueueItem, nullptr); }
+    inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) { return xQueueReceive(_dataReadyQueue, &_dataReadyQueueItem, ticksToWait); } // returns pdPASS(1) if queue read, pdFAIL(0) if timeout
+    inline void SIGNAL_DATA_READY_FROM_ISR() {
+        _dataReadyQueueHigherPriorityTaskWoken = pdFALSE;
+        xQueueOverwriteFromISR(_dataReadyQueue, &_dataReadyQueueItem, &_dataReadyQueueHigherPriorityTaskWoken); 
+        portYIELD_FROM_ISR(_dataReadyQueueHigherPriorityTaskWoken);
+    }
 #else
 
 public:
-    inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) const { (void)ticksToWait; return 0; }
-    inline void SIGNAL_DATA_READY_FROM_ISR() const {}
+    inline int32_t WAIT_DATA_READY(uint32_t ticksToWait) { (void)ticksToWait; return 0; }
+    inline void SIGNAL_DATA_READY_FROM_ISR() {}
 
 #endif // FRAMEWORK_USE_FREERTOS
 };

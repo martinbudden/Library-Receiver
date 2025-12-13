@@ -115,19 +115,17 @@ public:
     inline int32_t WAIT_FOR_PRIMARY_DATA_RECEIVED(uint32_t ticksToWait) { return xQueueReceive(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, ticksToWait); }
     //inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() { xQueueSendFromISR(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, nullptr); }
     inline void SIGNAL_PRIMARY_DATA_RECEIVED_FROM_ISR() {
+        _primaryDataReceivedQueueHigherPriorityTaskWoken = pdFALSE;
         xQueueOverwriteFromISR(_primaryDataReceivedQueue, &_primaryDataReceivedQueueItem, &_primaryDataReceivedQueueHigherPriorityTaskWoken);
-        if (_primaryDataReceivedQueueHigherPriorityTaskWoken == pdTRUE) {
-            portYIELD_FROM_ISR(); // or portEND_SWITCHING_ISR() depending on the port.
-        }
+        portYIELD_FROM_ISR(_primaryDataReceivedQueueHigherPriorityTaskWoken); // or portEND_SWITCHING_ISR() depending on the port.
     }
     inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED() { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, portMAX_DELAY); }
     inline int32_t WAIT_FOR_SECONDARY_DATA_RECEIVED(uint32_t ticksToWait) { return xQueueReceive(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, ticksToWait); }
     //inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() { xQueueSendFromISR(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, nullptr); }
     inline void SIGNAL_SECONDARY_DATA_RECEIVED_FROM_ISR() {
-        xQueueSendFromISR(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, &_secondaryDataReceivedQueueHigherPriorityTaskWoken);
-        if (_secondaryDataReceivedQueueHigherPriorityTaskWoken == pdTRUE) {
-            portYIELD_FROM_ISR(); // or portEND_SWITCHING_ISR() depending on the port.
-        }
+        _secondaryDataReceivedQueueHigherPriorityTaskWoken = pdFALSE;
+        xQueueOverwriteFromISR(_secondaryDataReceivedQueue, &_secondaryDataReceivedQueueItem, &_secondaryDataReceivedQueueHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(_secondaryDataReceivedQueueHigherPriorityTaskWoken); // or portEND_SWITCHING_ISR() depending on the port.
     }
 #else
 public:
