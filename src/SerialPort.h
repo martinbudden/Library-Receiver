@@ -140,8 +140,8 @@ private:
 
     uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
     BaseType_t _dataReadyQueueHigherPriorityTaskWoken = pdFALSE;
-    enum { IMU_DATA_READY_QUEUE_LENGTH = 1 };
-    std::array<uint8_t, IMU_DATA_READY_QUEUE_LENGTH * sizeof(_dataReadyQueueItem)> _dataReadyQueueStorageArea {};
+    enum { DATA_READY_QUEUE_LENGTH = 1 };
+    std::array<uint8_t, DATA_READY_QUEUE_LENGTH * sizeof(_dataReadyQueueItem)> _dataReadyQueueStorageArea {};
     StaticQueue_t _dataReadyQueueStatic {};
     QueueHandle_t _dataReadyQueue {};
 public:
@@ -149,7 +149,7 @@ public:
     inline void SIGNAL_DATA_READY_FROM_ISR() {
         _dataReadyQueueHigherPriorityTaskWoken = pdFALSE;
         xQueueOverwriteFromISR(_dataReadyQueue, &_dataReadyQueueItem, &_dataReadyQueueHigherPriorityTaskWoken); 
-        portYIELD_FROM_ISR(_dataReadyQueueHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(_dataReadyQueueHigherPriorityTaskWoken); // cppcheck-suppress cstyleCast
     }
 #else
 

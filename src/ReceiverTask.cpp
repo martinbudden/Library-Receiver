@@ -81,7 +81,14 @@ Task function for the ReceiverTask. Sets up and runs the task loop() function.
 
         while (true) {
             // delay until the end of the next taskIntervalTicks
+#if (tskKERNEL_VERSION_MAJOR > 10) || ((tskKERNEL_VERSION_MAJOR == 10) && (tskKERNEL_VERSION_MINOR >= 5))
+            const BaseType_t wasDelayed = xTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
+            if (wasDelayed) {
+                _wasDelayed = true;
+            }
+#else
             vTaskDelayUntil(&_previousWakeTimeTicks, taskIntervalTicks);
+#endif
             while (_receiver.isDataAvailable()) {
                 // Read 1 byte from UART buffer and give it to the RX protocol parser
                 if (_receiver.onDataReceivedFromISR(_receiver.readByte())) {

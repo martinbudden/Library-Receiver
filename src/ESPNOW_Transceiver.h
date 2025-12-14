@@ -89,25 +89,25 @@ private:
     uint32_t _tickCountDelta {0};
     uint32_t _receivedPacketCount {0}; //!< used to check for dropped packets
     // by default the transceiver has two peers, the broadcast peer and the primary peer
-    int _isPrimaryPeerMacAddressSet {false}; // this is int rather than bool because using bool caused strange bugs
-    int _peerCount {0};
-    uint8_t _channel;
+    uint32_t _isPrimaryPeerMacAddressSet {false}; // this is uint32_t rather than bool because using bool caused strange bugs
+    uint32_t _peerCount {0};
+    uint32_t _channel;
     std::array<peer_data_t, MAX_PEER_COUNT> _peerData;
     esp_now_send_status_t _sendStatus {ESP_NOW_SEND_SUCCESS};
     std::array<uint8_t, ESP_NOW_ETH_ALEN + 2> _myMacAddress {0, 0, 0, 0, 0, 0, 0, 0};
 
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW) && defined(FRAMEWORK_USE_FREERTOS)
-    enum { DATA_READY_QUEUE_LENGTH = 1}; // length MUST be 1 to be used by xQueueOverwriteFromISR
+    enum { DATA_RECEIVED_QUEUE_LENGTH = 1}; // length MUST be 1 to be used by xQueueOverwriteFromISR
 
     uint32_t _primaryDataReceivedQueueItem {}; // this is just a dummy item whose value is not used
     BaseType_t _primaryDataReceivedQueueHigherPriorityTaskWoken = pdFALSE;
-    std::array<uint8_t, DATA_READY_QUEUE_LENGTH * sizeof(_primaryDataReceivedQueueItem)> _primaryDataReceivedQueueStorageArea {};
+    std::array<uint8_t, DATA_RECEIVED_QUEUE_LENGTH * sizeof(_primaryDataReceivedQueueItem)> _primaryDataReceivedQueueStorageArea {};
     StaticQueue_t _primaryDataReceivedQueueStatic {};
     QueueHandle_t _primaryDataReceivedQueue {};
 
     uint32_t _secondaryDataReceivedQueueItem {}; // this is just a dummy item whose value is not used
     BaseType_t _secondaryDataReceivedQueueHigherPriorityTaskWoken = pdFALSE;
-    std::array<uint8_t, DATA_READY_QUEUE_LENGTH * sizeof(_secondaryDataReceivedQueueItem)> _secondaryDataReceivedQueueStorageArea {};
+    std::array<uint8_t, DATA_RECEIVED_QUEUE_LENGTH * sizeof(_secondaryDataReceivedQueueItem)> _secondaryDataReceivedQueueStorageArea {};
     StaticQueue_t _secondaryDataReceivedQueueStatic {};
     QueueHandle_t _secondaryDataReceivedQueue {};
 public:

@@ -63,12 +63,12 @@ ESPNOW_Transceiver::ESPNOW_Transceiver(const uint8_t* myMacAddress, uint8_t chan
     transceiver = this;
     memcpy(&_myMacAddress[0], myMacAddress, ESP_NOW_ETH_ALEN);
 #if defined(LIBRARY_RECEIVER_USE_ESPNOW) && defined(FRAMEWORK_USE_FREERTOS)
-    _primaryDataReceivedQueue = xQueueCreateStatic(DATA_READY_QUEUE_LENGTH, sizeof(_primaryDataReceivedQueueItem), &_primaryDataReceivedQueueStorageArea[0], &_primaryDataReceivedQueueStatic);
+    _primaryDataReceivedQueue = xQueueCreateStatic(DATA_RECEIVED_QUEUE_LENGTH, sizeof(_primaryDataReceivedQueueItem), &_primaryDataReceivedQueueStorageArea[0], &_primaryDataReceivedQueueStatic);
     configASSERT(_primaryDataReceivedQueue);
     const UBaseType_t primaryMessageCount = uxQueueMessagesWaiting(_primaryDataReceivedQueue);
     assert(primaryMessageCount == 0);
 
-    _secondaryDataReceivedQueue = xQueueCreateStatic(DATA_READY_QUEUE_LENGTH, sizeof(_secondaryDataReceivedQueueItem), &_secondaryDataReceivedQueueStorageArea[0], &_secondaryDataReceivedQueueStatic);
+    _secondaryDataReceivedQueue = xQueueCreateStatic(DATA_RECEIVED_QUEUE_LENGTH, sizeof(_secondaryDataReceivedQueueItem), &_secondaryDataReceivedQueueStorageArea[0], &_secondaryDataReceivedQueueStatic);
     configASSERT(_secondaryDataReceivedQueue);
     const UBaseType_t secondaryMessageCount = uxQueueMessagesWaiting(_secondaryDataReceivedQueue);
     assert(secondaryMessageCount == 0);
@@ -179,7 +179,7 @@ esp_err_t ESPNOW_Transceiver::addSecondaryPeer(received_data_t& received_data, c
 
 IRAM_ATTR bool ESPNOW_Transceiver::isPrimaryPeerMacAddressSet() const
 {
-    return _isPrimaryPeerMacAddressSet; // NOLINT(readability-implicit-bool-conversion)
+    return static_cast<bool>(_isPrimaryPeerMacAddressSet);
 }
 
 /*!
