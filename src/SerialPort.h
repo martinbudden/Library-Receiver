@@ -69,6 +69,25 @@ class SerialPort {
 public:
     enum uart_index_e : uint8_t { UART_INDEX_0, UART_INDEX_1, UART_INDEX_2, UART_INDEX_3, UART_INDEX_4, UART_INDEX_5, UART_INDEX_6, UART_INDEX_7 };
     enum { PARITY_NONE, PARITY_EVEN, PARITY_ODD };
+    enum baudrate_e {
+        BAUDRATE_AUTO = 0,
+        BAUDRATE_9600,
+        BAUDRATE_19200,
+        BAUDRATE_38400,
+        BAUDRATE_57600,
+        BAUDRATE_115200,
+        BAUDRATE_230400,
+        BAUDRATE_250000,
+        BAUDRATE_400000,
+        BAUDRATE_460800,
+        BAUDRATE_500000,
+        BAUDRATE_921600,
+        BAUDRATE_1000000,
+        BAUDRATE_1500000,
+        BAUDRATE_2000000,
+        BAUDRATE_2470000,
+        BAUDRATE_COUNT
+    };
 public:
     // negative pin means it is inverted
     struct port_pin_t {
@@ -158,4 +177,9 @@ public:
     inline void SIGNAL_DATA_READY_FROM_ISR() {}
 
 #endif // FRAMEWORK_USE_FREERTOS
+public:
+    static constexpr std::array <uint32_t, BAUDRATE_COUNT> baudrates {
+        0, 9600, 19200, 38400, 57600, 115200, 230400, 250000,
+        400000, 460800, 500000, 921600, 1000000, 1500000, 2000000, 2470000
+    };
 };

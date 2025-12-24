@@ -41,4 +41,4 @@ void loop()
 
 #endif // FRAMEWORK
 
-#endif // USE_EMPTY_MAIN
+#endif // LIBRARY_RECEIVER_USE_EMPTY_MAIN
