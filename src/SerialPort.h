@@ -116,6 +116,7 @@ public:
     SerialPort(const uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
     SerialPort(SerialPortWatcherBase* watcher, const serial_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity);
     void init();
+    void uartInit();
 private:
     // Receiver is not copyable or moveable
     SerialPort(const SerialPort&) = delete;
@@ -127,8 +128,10 @@ public:
     bool onDataReceivedFromISR(uint8_t data);
     bool isDataAvailable() const;
     uint8_t readByte();
-    size_t availableForWrite() const;
+    size_t availableForWrite();
+    void writeByte(uint8_t data);
     size_t write(const uint8_t* buf, size_t len);
+    uint32_t setBaudrate(uint32_t baudrate);
 public:
     static void dataReadyISR();
 #if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
@@ -142,9 +145,10 @@ private:
     const uint8_t _dataBits;
     const uint8_t _stopBits;
     const uint8_t _parity;
-    const uint32_t _baudrate;
+    uint32_t _baudrate;
 #if defined(FRAMEWORK_RPI_PICO) || defined(FRAMEWORK_ARDUINO_RPI_PICO)
     uart_inst_t* _uart {};
+#elif defined(FRAMEWORK_ESPIDF)
 #elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     UART_HandleTypeDef _uart {};
     uint8_t _rxByte {};
@@ -157,7 +161,7 @@ private:
 
 #if defined(FRAMEWORK_USE_FREERTOS)
 
-    uint32_t _dataReadyQueueItem {}; // this is just a dummy item whose value is not used
+    uint32_t _dataReadyQueueItem {};
     BaseType_t _dataReadyQueueHigherPriorityTaskWoken = pdFALSE;
     enum { DATA_READY_QUEUE_LENGTH = 1 };
     std::array<uint8_t, DATA_READY_QUEUE_LENGTH * sizeof(_dataReadyQueueItem)> _dataReadyQueueStorageArea {};

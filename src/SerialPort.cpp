@@ -35,10 +35,12 @@ void __not_in_flash_func(SerialPort::dataReadyISR)() // NOLINT(bugprone-reserved
 }
 #elif defined(FRAMEWORK_STM32_CUBE)
 // ISR called back when byte received on uart
+#if false
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) // cppcheck-suppress constParameterPointer
 {
     SerialPort::dataReadyISR(huart);
 }
+#endif
 
 FAST_CODE void SerialPort::dataReadyISR(const UART_HandleTypeDef *huart) // NOLINT(readability-convert-member-functions-to-static)
 {
@@ -231,6 +233,25 @@ void SerialPort::init() // NOLINT(readability-make-member-function-const)
 #endif
     HAL_GPIO_Init(gpioPort(_pins.rx.port), &GPIO_InitStruct);
 
+    uartInit();
+
+    // Enable UART interrupt, calls back HAL_UART_RxCpltCallback when data received
+    HAL_UART_Receive_IT(&_uart, &_rxByte, 1);
+
+
+#elif defined(FRAMEWORK_TEST)
+
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    const uint32_t config = (_parity == PARITY_NONE) ? SERIAL_8N1 : (_parity == PARITY_EVEN) ? SERIAL_8E1 : SERIAL_8O1;
+    _uart.begin(_baudrate, config, _pins.rx.pin, _pins.tx.pin);
+#endif
+#endif
+}
+
+void SerialPort::uartInit() // NOLINT(readability-make-member-function-const)
+{
+#if defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     _uart.Init.BaudRate = _baudrate;
     _uart.Init.WordLength = UART_WORDLENGTH_8B;
     _uart.Init.StopBits = UART_STOPBITS_1;
@@ -250,18 +271,6 @@ void SerialPort::init() // NOLINT(readability-make-member-function-const)
     }
 #endif
     HAL_UART_Init(&_uart);
-
-    // Enable UART interrupt, calls back HAL_UART_RxCpltCallback when data received
-    HAL_UART_Receive_IT(&_uart, &_rxByte, 1);
-
-
-#elif defined(FRAMEWORK_TEST)
-
-#else // defaults to FRAMEWORK_ARDUINO
-#if defined(FRAMEWORK_ARDUINO_ESP32)
-    const uint32_t config = (_parity == PARITY_NONE) ? SERIAL_8N1 : (_parity == PARITY_EVEN) ? SERIAL_8E1 : SERIAL_8O1;
-    _uart.begin(_baudrate, config, _pins.rx.pin, _pins.tx.pin);
-#endif
 #endif
 }
 
@@ -302,16 +311,11 @@ uint8_t SerialPort::readByte()
 #elif defined(FRAMEWORK_ESPIDF)
     return 0;
 #elif defined(FRAMEWORK_STM32_CUBE)
-#if false
-    uint8_t data; // Buffer to store received data
-    HAL_UART_Receive(&_uart, &data, sizeof(data), HAL_MAX_DELAY);
-#else
-    // read from uart
 #if defined(FRAMEWORK_STM32_CUBE_F4)
     const uint8_t data = static_cast<uint8_t>(_uart.Instance->DR & 0xFF);
 #else
-    const uint8_t data = 0;
-#endif
+    uint8_t data {}; // NOLINT(misc-const-correctness)
+    HAL_UART_Receive(&_uart, &data, sizeof(data), HAL_MAX_DELAY);
 #endif
     return data;
 #elif defined(FRAMEWORK_TEST)
@@ -325,45 +329,94 @@ uint8_t SerialPort::readByte()
 #endif
 }
 
-size_t SerialPort::availableForWrite() const
+size_t SerialPort::availableForWrite()
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    return 0;
+    return uart_is_writable(_uart);
 #elif defined(FRAMEWORK_ESPIDF)
     return 0;
 #elif defined(FRAMEWORK_STM32_CUBE)
-    return 0;
+    return (__HAL_UART_GET_FLAG(&_uart, UART_FLAG_TXE)) ? true : false;
 #elif defined(FRAMEWORK_TEST)
     return 0;
 #else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    return _uart.availableForWrite();
+#else
     return Serial.availableForWrite();
+#endif
+#endif
+}
+
+void SerialPort::writeByte(uint8_t data)
+{
+#if defined(FRAMEWORK_RPI_PICO)
+    uart_putc_raw(_uart, data);
+#elif defined(FRAMEWORK_ESPIDF)
+    (void)data;
+#elif defined(FRAMEWORK_STM32_CUBE)
+    HAL_UART_Transmit(&_uart, &data, 1, HAL_MAX_DELAY);
+#elif defined(FRAMEWORK_TEST)
+    (void)data;
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    _uart.write(data);
+#else
+    return Serial.write(data);
+#endif
 #endif
 }
 
 size_t SerialPort::write(const uint8_t* buf, size_t len)
 {
 #if defined(FRAMEWORK_RPI_PICO)
-    (void)buf;
-    (void)len;
-    return 0;
+    uart_write_blocking (_uart, buf, len);
+    return len;
 #elif defined(FRAMEWORK_ESPIDF)
     (void)buf;
     (void)len;
     return 0;
 #elif defined(FRAMEWORK_STM32_CUBE)
-    (void)buf;
-    (void)len;
-    return 0;
+    HAL_UART_Transmit(&_uart, buf, len, HAL_MAX_DELAY);
+    return len;
 #elif defined(FRAMEWORK_TEST)
     (void)buf;
     (void)len;
     return 0;
 #else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    return _uart.write(buf, len);
+#else
     return Serial.write(buf, len);
+#endif
 #endif
 }
 
 bool SerialPort::onDataReceivedFromISR(uint8_t data)
 {
     return _watcher ? _watcher->onDataReceivedFromISR(data) : true;
+}
+
+uint32_t SerialPort::setBaudrate(uint32_t baudrate)
+{
+    _baudrate = baudrate;
+#if defined(FRAMEWORK_RPI_PICO)
+    return uart_set_baudrate (_uart, baudrate);
+#elif defined(FRAMEWORK_ESPIDF)
+    return baudrate;
+#elif defined(FRAMEWORK_STM32_CUBE)
+    HAL_UART_DeInit(&_uart);
+    uartInit();
+    return baudrate;
+#elif defined(FRAMEWORK_TEST)
+    return baudrate;
+#else // defaults to FRAMEWORK_ARDUINO
+#if defined(FRAMEWORK_ARDUINO_ESP32)
+    _uart.updateBaudRate(baudrate);
+    return baudrate;
+#else
+    Serial.updateBaudRate(baudrate);
+    return baudrate;
+#endif
+#endif
 }
