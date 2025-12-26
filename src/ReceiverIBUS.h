@@ -16,8 +16,7 @@ public:
     enum { MODEL_IA6, MODEL_IA6B };
     enum { SERIAL_RX_PACKET_LENGTH = 32, TELEMETRY_PACKET_LENGTH = 4 };
 public:
-    ReceiverIBUS(const SerialPort::uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
-    ReceiverIBUS(const SerialPort::stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    explicit ReceiverIBUS(SerialPort& serialPort);
 private:
     // Receiver is not copyable or moveable
     ReceiverIBUS(const ReceiverIBUS&) = delete;

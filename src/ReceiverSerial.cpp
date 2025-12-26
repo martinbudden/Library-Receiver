@@ -12,8 +12,8 @@ bool ReceiverSerialPortWatcher::onDataReceivedFromISR(uint8_t data)
 }
 
 
-ReceiverSerial::ReceiverSerial(const SerialPort::serial_pins_t& pins, uint8_t uartIndex, uint32_t baudrate, uint8_t dataBits, uint8_t stopBits, uint8_t parity) : // NOLINT(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    _serialPort(&_serialPortWatcher, pins, uartIndex, baudrate, dataBits, stopBits, parity),
+ReceiverSerial::ReceiverSerial(SerialPort& serialPort) :
+    _serialPort(serialPort),
     _serialPortWatcher(*this)
 {
 }

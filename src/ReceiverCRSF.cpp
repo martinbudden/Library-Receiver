@@ -1,15 +1,10 @@
 #include "ReceiverCRSF.h"
 
 
-ReceiverCRSF::ReceiverCRSF(const SerialPort::stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverSerial(SerialPort::serial_pins_t{{pins.tx.port,pins.tx.pin,false},{pins.rx.port,pins.rx.pin,false}}, uartIndex, baudrate, DATA_BITS, STOP_BITS, PARITY)
+ReceiverCRSF::ReceiverCRSF(SerialPort& serialPort) :
+    ReceiverSerial(serialPort)
 {
     _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT;
-}
-
-ReceiverCRSF::ReceiverCRSF(const SerialPort::uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate) :
-    ReceiverCRSF(SerialPort::stm32_uart_pins_t{{0,pins.tx},{0,pins.rx}}, uartIndex, baudrate)
-{
 }
 
 /*!

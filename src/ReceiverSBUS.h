@@ -16,8 +16,7 @@ public:
     enum { DATA_BITS = 8, PARITY = SerialPort::PARITY_EVEN, STOP_BITS = 2 }; // 8E2
     enum { TIME_NEEDED_PER_FRAME_US = 3000 };
 public:
-    ReceiverSBUS(const SerialPort::uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
-    ReceiverSBUS(const SerialPort::stm32_uart_pins_t& pins, uint8_t uartIndex, uint32_t baudrate);
+    explicit ReceiverSBUS(SerialPort& serialPort);
 private:
     // Receiver is not copyable or moveable
     ReceiverSBUS(const ReceiverSBUS&) = delete;

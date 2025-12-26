@@ -13,7 +13,8 @@ void tearDown()
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,misc-const-correctness,readability-convert-member-functions-to-static,readability-magic-numbers)
 void test_receiver_ibus()
 {
-    static ReceiverIBUS receiver{SerialPort::uart_pins_t{}, 0, 0};
+    static SerialPort serialPort(SerialPort::uart_pins_t{}, 0, 0, ReceiverIBUS::DATA_BITS, ReceiverIBUS::STOP_BITS, ReceiverIBUS::PARITY);
+    static ReceiverIBUS receiver(serialPort);
 
     receiver.setPacketEmpty();
     TEST_ASSERT_TRUE(receiver.isPacketEmpty());
