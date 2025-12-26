@@ -68,7 +68,7 @@ public:
 class SerialPort {
 public:
     enum uart_index_e : uint8_t { UART_INDEX_0, UART_INDEX_1, UART_INDEX_2, UART_INDEX_3, UART_INDEX_4, UART_INDEX_5, UART_INDEX_6, UART_INDEX_7 };
-    enum { PARITY_NONE, PARITY_EVEN, PARITY_ODD };
+    enum parity_e { PARITY_NONE, PARITY_EVEN, PARITY_ODD };
     enum baudrate_e {
         BAUDRATE_AUTO = 0,
         BAUDRATE_9600,

@@ -288,7 +288,7 @@ bool SerialPort::isDataAvailable() const
     return uart_is_readable(_uart);
 #elif defined(FRAMEWORK_ESPIDF)
     return false;
-#elif defined(FRAMEWORK_STM32_CUBE)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     return (__HAL_UART_GET_FLAG(&_uart, UART_FLAG_RXNE)) ? true : false;
 #elif defined(FRAMEWORK_TEST)
     return false;
@@ -310,7 +310,7 @@ uint8_t SerialPort::readByte()
     return uart_getc(_uart);
 #elif defined(FRAMEWORK_ESPIDF)
     return 0;
-#elif defined(FRAMEWORK_STM32_CUBE)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
 #if defined(FRAMEWORK_STM32_CUBE_F4)
     const uint8_t data = static_cast<uint8_t>(_uart.Instance->DR & 0xFF);
 #else
@@ -335,7 +335,7 @@ size_t SerialPort::availableForWrite()
     return uart_is_writable(_uart);
 #elif defined(FRAMEWORK_ESPIDF)
     return 0;
-#elif defined(FRAMEWORK_STM32_CUBE)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     return (__HAL_UART_GET_FLAG(&_uart, UART_FLAG_TXE)) ? true : false;
 #elif defined(FRAMEWORK_TEST)
     return 0;
@@ -354,7 +354,7 @@ void SerialPort::writeByte(uint8_t data)
     uart_putc_raw(_uart, data);
 #elif defined(FRAMEWORK_ESPIDF)
     (void)data;
-#elif defined(FRAMEWORK_STM32_CUBE)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     HAL_UART_Transmit(&_uart, &data, 1, HAL_MAX_DELAY);
 #elif defined(FRAMEWORK_TEST)
     (void)data;
@@ -362,7 +362,7 @@ void SerialPort::writeByte(uint8_t data)
 #if defined(FRAMEWORK_ARDUINO_ESP32)
     _uart.write(data);
 #else
-    return Serial.write(data);
+    Serial.write(data);
 #endif
 #endif
 }
@@ -376,7 +376,7 @@ size_t SerialPort::write(const uint8_t* buf, size_t len)
     (void)buf;
     (void)len;
     return 0;
-#elif defined(FRAMEWORK_STM32_CUBE)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     HAL_UART_Transmit(&_uart, buf, len, HAL_MAX_DELAY);
     return len;
 #elif defined(FRAMEWORK_TEST)
@@ -404,7 +404,7 @@ uint32_t SerialPort::setBaudrate(uint32_t baudrate)
     return uart_set_baudrate (_uart, baudrate);
 #elif defined(FRAMEWORK_ESPIDF)
     return baudrate;
-#elif defined(FRAMEWORK_STM32_CUBE)
+#elif defined(FRAMEWORK_STM32_CUBE) || defined(FRAMEWORK_ARDUINO_STM32)
     HAL_UART_DeInit(&_uart);
     uartInit();
     return baudrate;
@@ -415,7 +415,6 @@ uint32_t SerialPort::setBaudrate(uint32_t baudrate)
     _uart.updateBaudRate(baudrate);
     return baudrate;
 #else
-    Serial.updateBaudRate(baudrate);
     return baudrate;
 #endif
 #endif
