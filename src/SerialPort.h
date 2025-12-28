@@ -69,6 +69,8 @@ class SerialPort {
 public:
     enum uart_index_e : uint8_t { UART_INDEX_0, UART_INDEX_1, UART_INDEX_2, UART_INDEX_3, UART_INDEX_4, UART_INDEX_5, UART_INDEX_6, UART_INDEX_7 };
     enum parity_e { PARITY_NONE, PARITY_EVEN, PARITY_ODD };
+    enum stop_bits_e { STOP_BITS_1 = 1, STOP_BITS_2 = 2 };
+    enum data_bits_e { DATA_BITS_5 = 5, DATA_BITS_6 = 6, DATA_BITS_7 = 7, DATA_BITS_8 = 8, DATA_BITS_9 = 9};
     enum baudrate_e {
         BAUDRATE_AUTO = 0,
         BAUDRATE_9600,
@@ -118,7 +120,7 @@ public:
     void init();
     void uartInit();
 private:
-    // Receiver is not copyable or moveable
+    // SerialPort is not copyable or moveable
     SerialPort(const SerialPort&) = delete;
     SerialPort& operator=(const SerialPort&) = delete;
     SerialPort(SerialPort&&) = delete;

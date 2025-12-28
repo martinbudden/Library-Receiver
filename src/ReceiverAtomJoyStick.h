@@ -8,7 +8,7 @@ class ReceiverAtomJoyStick : public ReceiverBase {
 public:
     ReceiverAtomJoyStick(const uint8_t* macAddress, uint8_t channel);
 private:
-    // Receiver is not copyable or moveable
+    // ReceiverAtomJoyStick is not copyable or moveable
     ReceiverAtomJoyStick(const ReceiverAtomJoyStick&) = delete;
     ReceiverAtomJoyStick& operator=(const ReceiverAtomJoyStick&) = delete;
     ReceiverAtomJoyStick(ReceiverAtomJoyStick&&) = delete;

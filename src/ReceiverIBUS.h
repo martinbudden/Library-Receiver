@@ -18,7 +18,7 @@ public:
 public:
     explicit ReceiverIBUS(SerialPort& serialPort);
 private:
-    // Receiver is not copyable or moveable
+    // ReceiverIBUS is not copyable or moveable
     ReceiverIBUS(const ReceiverIBUS&) = delete;
     ReceiverIBUS& operator=(const ReceiverIBUS&) = delete;
     ReceiverIBUS(ReceiverIBUS&&) = delete;

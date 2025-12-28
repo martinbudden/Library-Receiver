@@ -19,7 +19,7 @@ public:
     explicit ReceiverSerial(SerialPort& serialPort);
     void init();
 private:
-    // Receiver is not copyable or moveable
+    // ReceiverSerial is not copyable or moveable
     ReceiverSerial(const ReceiverSerial&) = delete;
     ReceiverSerial& operator=(const ReceiverSerial&) = delete;
     ReceiverSerial(ReceiverSerial&&) = delete;
