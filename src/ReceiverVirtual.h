@@ -10,7 +10,7 @@ public:
     enum { CHANNEL_COUNT = 18 };
 
     virtual ~ReceiverVirtual() = default;
-    ReceiverVirtual() { _auxiliaryChannelCount = CHANNEL_COUNT - STICK_COUNT; }
+    ReceiverVirtual();
 private:
     // ReceiverVirtual is not copyable or moveable
     ReceiverVirtual(const ReceiverVirtual&) = delete;

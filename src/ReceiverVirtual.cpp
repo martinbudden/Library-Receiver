@@ -1,6 +1,11 @@
 #include "ReceiverVirtual.h"
 
 
+ReceiverVirtual::ReceiverVirtual()
+{
+    _auxiliaryChannelCount = static_cast<uint32_t>(CHANNEL_COUNT) - static_cast<uint32_t>(STICK_COUNT);
+}
+
 int32_t ReceiverVirtual::WAIT_FOR_DATA_RECEIVED(uint32_t ticksToWait)
 {
     (void)ticksToWait;

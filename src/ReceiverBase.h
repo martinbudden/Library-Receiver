@@ -16,7 +16,10 @@ class ReceiverBase {
 public:
     enum { STICK_COUNT = 4 };
     enum { MOTOR_ON_OFF_SWITCH = 0, CONTROL_MODE_SWITCH = 1, ALTITUDE_MODE_SWITCH = 2 };
-    enum { CHANNEL_LOW =  1000, CHANNEL_HIGH = 2000, CHANNEL_MIDDLE = 1500, CHANNEL_RANGE = CHANNEL_HIGH - CHANNEL_LOW };
+    static constexpr uint16_t CHANNEL_LOW =  1000;
+    static constexpr uint16_t CHANNEL_HIGH = 2000;
+    static constexpr uint16_t CHANNEL_MIDDLE = 1500;
+    static constexpr uint16_t CHANNEL_RANGE = CHANNEL_HIGH - CHANNEL_LOW;
     static constexpr float CHANNEL_LOW_F = 1000.0F;
     static constexpr float CHANNEL_HIGH_F = 2000.0F;
     static constexpr float CHANNEL_MIDDLE_F = 1500.0F;
