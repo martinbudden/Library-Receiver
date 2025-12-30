@@ -1,4 +1,4 @@
-#include "ReceiverNull.h"
+#include "ReceiverVirtual.h"
 
 #include <unity.h>
 
@@ -13,7 +13,7 @@ void tearDown()
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 void test_receiver_switches()
 {
-    ReceiverNull receiver; // NOLINT(misc-const-correctness) false positive
+    ReceiverVirtual receiver; // NOLINT(misc-const-correctness) false positive
 
     uint8_t switchIndex = 0;
     TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
@@ -52,7 +52,7 @@ void test_receiver_switches()
 
 void test_receiver_controls()
 {
-    ReceiverNull receiver;
+    ReceiverVirtual receiver;
 
     ReceiverBase::controls_t controls = receiver.getControls();
     TEST_ASSERT_EQUAL_FLOAT(0.0F, controls.throttle);
@@ -70,8 +70,7 @@ void test_receiver_controls()
 
 void test_receiver_auxiliary_channels()
 {
-    enum { AUXILIARY_CHANNEL_COUNT = 4};
-    ReceiverNull receiver(AUXILIARY_CHANNEL_COUNT);
+    ReceiverVirtual receiver;
 
     uint8_t switchIndex = 0;
     TEST_ASSERT_EQUAL(0, receiver.getSwitch(switchIndex));
@@ -96,6 +95,10 @@ void test_receiver_auxiliary_channels()
     TEST_ASSERT_EQUAL(ReceiverBase::CHANNEL_LOW, receiver.getAuxiliaryChannel(switchIndex));
     receiver.setSwitch(switchIndex, 1);
     TEST_ASSERT_EQUAL(ReceiverBase::CHANNEL_HIGH, receiver.getAuxiliaryChannel(switchIndex));
+
+    receiver.setAuxiliaryChannelPWM(2, 1200);
+    TEST_ASSERT_EQUAL(1200, receiver.getAuxiliaryChannel(2));
+    TEST_ASSERT_EQUAL(1200, receiver.getChannelPWM(2 + ReceiverBase::STICK_COUNT));
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
