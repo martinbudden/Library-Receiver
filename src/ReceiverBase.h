@@ -130,7 +130,7 @@ public:
     virtual uint16_t getChannelPWM(size_t index) const = 0;
     uint32_t getAuxiliaryChannelCount() const { return _auxiliaryChannelCount; }
     uint16_t getAuxiliaryChannel(size_t index) const { return getChannelPWM(index + STICK_COUNT); }
-    bool isRangeActive(uint8_t auxiliaryChannelIndex, const channel_range_t& range) {
+    bool isRangeActive(uint8_t auxiliaryChannelIndex, const channel_range_t& range) const {
         if (range.startStep >= range.endStep) {
             return false;
         }
