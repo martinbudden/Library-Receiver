@@ -16,6 +16,7 @@ class ReceiverBase {
 public:
     enum { STICK_COUNT = 4 };
     enum { MOTOR_ON_OFF_SWITCH = 0, CONTROL_MODE_SWITCH = 1, ALTITUDE_MODE_SWITCH = 2 };
+
     static constexpr uint16_t CHANNEL_LOW =  1000;
     static constexpr uint16_t CHANNEL_HIGH = 2000;
     static constexpr uint16_t CHANNEL_MIDDLE = 1500;
@@ -24,6 +25,15 @@ public:
     static constexpr float CHANNEL_HIGH_F = 2000.0F;
     static constexpr float CHANNEL_MIDDLE_F = 1500.0F;
     static constexpr float CHANNEL_RANGE_F = 1000.0F;
+
+    static constexpr uint16_t CHANNEL_RANGE_MIN = 900;
+    static constexpr uint16_t CHANNEL_RANGE_MID = 1500;
+    static constexpr uint16_t CHANNEL_RANGE_MAX = 2100;
+    static constexpr uint16_t CHANNEL_RANGE_STEP = 25;
+    static constexpr uint16_t RANGE_STEP_MIN = 0;
+    static constexpr uint16_t RANGE_STEP_MID = ((CHANNEL_RANGE_MID - CHANNEL_RANGE_MIN) / CHANNEL_RANGE_STEP);
+    static constexpr uint16_t RANGE_STEP_MAX = ((CHANNEL_RANGE_MAX - CHANNEL_RANGE_MIN) / CHANNEL_RANGE_STEP);
+
     enum { // standardize receivers to use AETR (Ailerons, Elevator, Throttle, Rudder), ie ROLL, PITCH, THROTTLE, YAW
         ROLL,
         PITCH,
@@ -64,6 +74,16 @@ public:
         uint16_t roll;
         uint16_t pitch;
         uint16_t yaw;
+    };
+    /*! 
+    Steps are 25 apart
+        a value of 0 corresponds to a channel value of 900 or less
+        a value of 48 corresponds to a channel value of 2100 or more
+    48 steps between 900 and 2100
+    */
+    struct channel_range_t {
+        uint8_t startStep;
+        uint8_t endStep;
     };
 public:
     virtual ~ReceiverBase() = default;
@@ -110,6 +130,13 @@ public:
     virtual uint16_t getChannelPWM(size_t index) const = 0;
     uint32_t getAuxiliaryChannelCount() const { return _auxiliaryChannelCount; }
     uint16_t getAuxiliaryChannel(size_t index) const { return getChannelPWM(index + STICK_COUNT); }
+    bool isRangeActive(uint8_t auxiliaryChannelIndex, const channel_range_t& range) {
+        if (range.startStep >= range.endStep) {
+            return false;
+        }
+        const uint16_t channelValue = getAuxiliaryChannel(auxiliaryChannelIndex);
+        return (channelValue >= CHANNEL_RANGE_MIN + (range.startStep*CHANNEL_RANGE_STEP) && channelValue < CHANNEL_RANGE_MIN + (range.endStep*CHANNEL_RANGE_STEP));
+    }
 
     inline uint32_t getSwitch(size_t index) const { return static_cast<uint32_t>((_switches & (0b11U << (2*index))) >> (2*index)); }
     inline void setSwitch(size_t index, uint8_t value) { _switches &= static_cast<uint32_t>(~(0b11U << (2*index))); _switches |= static_cast<uint32_t>((value & 0b11U) << (2*index)); }
