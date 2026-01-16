@@ -59,9 +59,9 @@ void test_receiver_bind_packet()
             .length = 7,
             .type = ReceiverCRSF::FRAMETYPE_COMMAND,
             .payload = {
-                ReceiverCRSF::ADDRESS_CRSF_RECEIVER, 
-                ReceiverCRSF::ADDRESS_FLIGHT_CONTROLLER, 
-                ReceiverCRSF::COMMAND_SUBCMD_RX, 
+                ReceiverCRSF::ADDRESS_CRSF_RECEIVER,
+                ReceiverCRSF::ADDRESS_FLIGHT_CONTROLLER,
+                ReceiverCRSF::COMMAND_SUBCMD_RX,
                 ReceiverCRSF::COMMAND_SUBCMD_RX_BIND,
                 COMMAND_CRC,
                 PACKET_CRC

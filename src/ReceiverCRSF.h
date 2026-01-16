@@ -15,7 +15,7 @@ public:
 
     enum { CRSF_SYNC_BYTE = 0xC8, EDGE_TX_SYNC_BYTE = 0xEE };
     // see https://github.com/crsf-wg/crsf/wiki/Packet-Types
-    enum frametype_e { 
+    enum frametype_e {
         FRAMETYPE_GPS = 0x02,
         FRAMETYPE_VARIO_SENSOR = 0x07,
         FRAMETYPE_BATTERY_SENSOR = 0x08,
@@ -66,7 +66,7 @@ public:
     };
 
     enum { MAX_PACKET_SIZE = 64 };
-    union packet_u { 
+    union packet_u {
         std::array<uint8_t, MAX_PACKET_SIZE> data;
         struct value_t {
             uint8_t sync;

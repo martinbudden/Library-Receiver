@@ -75,7 +75,7 @@ public:
         uint16_t pitch;
         uint16_t yaw;
     };
-    /*! 
+    /*!
     Steps are 25 apart
         a value of 0 corresponds to a channel value of 900 or less
         a value of 48 corresponds to a channel value of 2100 or more

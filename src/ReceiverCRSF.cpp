@@ -23,7 +23,7 @@ uint16_t ReceiverCRSF::getChannelPWM(size_t index) const
     if (index >= CHANNEL_COUNT) {
         return CHANNEL_LOW;
     }
-    /* 
+    /*
     conversion from RC value to PWM
     for FRAMETYPE_RC_CHANNELS_PACKED(0x16)
            RC     PWM
@@ -121,7 +121,7 @@ bool ReceiverCRSF::unpackPacket()
 
     if (_packet.value.type == FRAMETYPE_RC_CHANNELS_PACKED) {
 #if false
-        union channels_u { 
+        union channels_u {
             std::array<uint8_t, MAX_PACKET_SIZE - 3> payload;
             rc_channels_packed_t rc;
         };
